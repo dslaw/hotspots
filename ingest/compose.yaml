@@ -1,0 +1,38 @@
+services:
+  cache:
+    image: redis:7.4.1-bookworm
+    ports:
+      - "8379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+
+  broker:
+    image: apache/kafka-native:3.9.0
+    ports:
+      - "9092:9092"
+    environment:
+      # Configure listeners for both docker and host.
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,DOCKER://broker:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+
+      # KRaft mode.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+
+      # Listener to use for broker-to-broker communication.
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "ingest:4:1"
+
+  ingest-worker:
+    build: .
+    env_file: .env
+    depends_on:
+      - cache
+      - broker
+    volumes:
+      - ./data:/worker/data
+      - ../schemas:/worker/schemas
