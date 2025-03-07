@@ -1,0 +1,71 @@
+name: ci
+
+on:
+  push:
+
+jobs:
+  ingest-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ingest
+    steps:
+      - uses: actions/checkout@v4
+    
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5"
+
+      - name: Install project
+        run: uv sync --dev
+
+      - name: Lint
+        run: uv run ruff check . --extend-select I
+
+      - name: Check formatting
+        run: uv run ruff format . --check
+
+      - name: Type check
+        run: uv run mypy src/
+
+      - name: Run tests
+        run: uv run python -m pytest tests/
+
+  consume-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: consume
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23"
+
+      - name: Lint
+        run: |
+          go vet ./...
+
+          gofmt_output=$(gofmt -l .)
+          echo ${gofmt_output}
+          if [[ -n $gofmt_output ]]; then
+            echo "Go code is not formatted, run `gofmt -w -s ./...`"
+            exit 1
+          fi 
+
+      - name: Run tests
+        run: go test ./...
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build compose stack
+        run: |
+          ln -s ingest/.env .env-ingest
+          ln -s consume/.env .env-consume
+          docker compose build
