@@ -1,0 +1,115 @@
+package main
+
+import (
+	"context"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/mmcloughlin/geohash"
+	"github.com/segmentio/kafka-go"
+)
+
+// BucketTime rounds the given time to `precision`, such that the given time
+// occurred no later than the returned time.
+func BucketTime(t time.Time, precision time.Duration) time.Time {
+	truncated := t.Truncate(precision)
+	if truncated == t {
+		return truncated
+	}
+	return truncated.Add(precision)
+}
+
+type Bucket struct {
+	Timestamp int64
+	Geohash   string
+}
+
+// AggregateWriter aggregates/buckets messages by time and location of incident
+// and writes the counts to the data sink.
+type AggregateWriter struct {
+	TimePrecision    time.Duration
+	GeohashPrecision uint
+	conn             *pgx.Conn
+}
+
+func NewAggregateWriter(timePrecision time.Duration, geohashPrecision uint, conn *pgx.Conn) *AggregateWriter {
+	if timePrecision <= 0 {
+		panic("Time precision must be positive")
+	}
+	if geohashPrecision == 0 {
+		panic("Geohash precision must be positive")
+	}
+	if conn == nil {
+		panic("Connection cannot be nil")
+	}
+	return &AggregateWriter{TimePrecision: timePrecision, GeohashPrecision: geohashPrecision, conn: conn}
+}
+
+// MakeBucket instantiates a Bucket for the given record and precision
+// parameters.
+func MakeBucket(record ProcessableRecord, timePrecision time.Duration, geohashPrecision uint) *Bucket {
+	coordinates := record.Coordinates()
+	if coordinates == nil {
+		return nil
+	}
+
+	ts := record.Timestamp()
+	geohash := geohash.EncodeWithPrecision(float64(coordinates.Latitude), float64(coordinates.Longitude), geohashPrecision)
+	timestamp := BucketTime(ts, timePrecision).Unix()
+	return &Bucket{Timestamp: timestamp, Geohash: geohash}
+}
+
+// Aggregate aggregates/buckets messages by time and location of incident and
+// returns the counts by bucket.
+func (w *AggregateWriter) Aggregate(messages []kafka.Message) map[Bucket]int {
+	bucketCounts := make(map[Bucket]int)
+	for record := range DecodeMessages(SchemaNameHeader, messages) {
+		bucket := MakeBucket(record, w.TimePrecision, w.GeohashPrecision)
+		if bucket == nil {
+			continue
+		}
+
+		count, ok := bucketCounts[*bucket]
+		if !ok {
+			count = 0
+		}
+
+		bucketCounts[*bucket] = count + 1
+	}
+
+	return bucketCounts
+}
+
+const insertAggregateRecordStmt = "insert into aggregate_buckets (occurred_at, geo_id, incident_count) values ($1, $2, $3)"
+
+func WriteAggregateRecords(ctx context.Context, conn *pgx.Conn, bucketCounts map[Bucket]int) error {
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	batch := &pgx.Batch{}
+	for bucket := range bucketCounts {
+		count, _ := bucketCounts[bucket]
+		batch.Queue(insertAggregateRecordStmt, bucket.Timestamp, bucket.Geohash, count)
+	}
+	br := tx.SendBatch(ctx, batch)
+	if err := br.Close(); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// Write aggregates/buckets messages by time and location of incident and writes
+// the counts to the data sink.
+// NB: Any message which cannot be decoded will be dropped.
+func (w *AggregateWriter) Write(ctx context.Context, messages []kafka.Message) error {
+	if len(messages) == 0 {
+		return nil
+	}
+
+	bucketCounts := w.Aggregate(messages)
+	return WriteAggregateRecords(ctx, w.conn, bucketCounts)
+}

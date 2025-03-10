@@ -25,15 +25,15 @@ type A311Case struct {
 	NeighborhoodsSffindBoundaries *string    `avro:"neighborhoods_sffind_boundaries"`
 	AnalysisNeighborhood          *string    `avro:"analysis_neighborhood"`
 	PoliceDistrict                *string    `avro:"police_district"`
-	Lat                           float64    `avro:"lat"`
-	Long                          float64    `avro:"long"`
+	Lat                           float32    `avro:"lat"`
+	Long                          float32    `avro:"long"`
 	Bos2012                       *float32   `avro:"bos_2012"`
 	Source                        string     `avro:"source"`
 	DataAsOf                      time.Time  `avro:"data_as_of"`
 	DataLoadedAt                  time.Time  `avro:"data_loaded_at"`
 }
 
-var schemaA311Case = avro.MustParse(`{"name":"raw.avro.a311_case","type":"record","fields":[{"name":"service_request_id","type":"int"},{"name":"requested_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"closed_date","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"updated_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"status_description","type":"string"},{"name":"status_notes","type":["null","string"]},{"name":"agency_responsible","type":"string"},{"name":"service_name","type":"string"},{"name":"service_subtype","type":"string"},{"name":"service_details","type":["null","string"]},{"name":"address","type":"string"},{"name":"street","type":["null","string"]},{"name":"supervisor_district","type":["null","float"]},{"name":"neighborhoods_sffind_boundaries","type":["null","string"]},{"name":"analysis_neighborhood","type":["null","string"]},{"name":"police_district","type":["null","string"]},{"name":"lat","type":"double"},{"name":"long","type":"double"},{"name":"bos_2012","type":["null","float"]},{"name":"source","type":"string"},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}}]}`)
+var schemaA311Case = avro.MustParse(`{"name":"raw.avro.a311_case","type":"record","fields":[{"name":"service_request_id","type":"int"},{"name":"requested_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"closed_date","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"updated_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"status_description","type":"string"},{"name":"status_notes","type":["null","string"]},{"name":"agency_responsible","type":"string"},{"name":"service_name","type":"string"},{"name":"service_subtype","type":"string"},{"name":"service_details","type":["null","string"]},{"name":"address","type":"string"},{"name":"street","type":["null","string"]},{"name":"supervisor_district","type":["null","float"]},{"name":"neighborhoods_sffind_boundaries","type":["null","string"]},{"name":"analysis_neighborhood","type":["null","string"]},{"name":"police_district","type":["null","string"]},{"name":"lat","type":"float"},{"name":"long","type":"float"},{"name":"bos_2012","type":["null","float"]},{"name":"source","type":"string"},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}}]}`)
 
 // Schema returns the schema for A311Case.
 func (o *A311Case) Schema() avro.Schema {
@@ -47,6 +47,64 @@ func (o *A311Case) Unmarshal(b []byte) error {
 
 // Marshal encodes the receiver.
 func (o *A311Case) Marshal() ([]byte, error) {
+	return avro.Marshal(o.Schema(), o)
+}
+
+// FireEmsCall is a generated struct.
+type FireEmsCall struct {
+	CallNumber                     string     `avro:"call_number"`
+	UnitID                         string     `avro:"unit_id"`
+	IncidentNumber                 string     `avro:"incident_number"`
+	CallType                       string     `avro:"call_type"`
+	CallDate                       time.Time  `avro:"call_date"`
+	WatchDate                      time.Time  `avro:"watch_date"`
+	ReceivedDttm                   time.Time  `avro:"received_dttm"`
+	EntryDttm                      time.Time  `avro:"entry_dttm"`
+	DispatchDttm                   time.Time  `avro:"dispatch_dttm"`
+	ResponseDttm                   *time.Time `avro:"response_dttm"`
+	OnSceneDttm                    *time.Time `avro:"on_scene_dttm"`
+	TransportDttm                  *time.Time `avro:"transport_dttm"`
+	HospitalDttm                   *time.Time `avro:"hospital_dttm"`
+	CallFinalDisposition           string     `avro:"call_final_disposition"`
+	AvailableDttm                  *time.Time `avro:"available_dttm"`
+	Address                        *string    `avro:"address"`
+	City                           string     `avro:"city"`
+	ZipcodeOfIncident              string     `avro:"zipcode_of_incident"`
+	Battalion                      string     `avro:"battalion"`
+	StationArea                    string     `avro:"station_area"`
+	Box                            string     `avro:"box"`
+	OriginalPriority               string     `avro:"original_priority"`
+	Priority                       string     `avro:"priority"`
+	FinalPriority                  string     `avro:"final_priority"`
+	AlsUnit                        *bool      `avro:"als_unit"`
+	CallTypeGroup                  *string    `avro:"call_type_group"`
+	NumberOfAlarms                 int        `avro:"number_of_alarms"`
+	UnitType                       string     `avro:"unit_type"`
+	UnitSequenceInCallDispatch     int        `avro:"unit_sequence_in_call_dispatch"`
+	FirePreventionDistrict         string     `avro:"fire_prevention_district"`
+	SupervisorDistrict             string     `avro:"supervisor_district"`
+	NeighborhoodAnalysisBoundaries *string    `avro:"neighborhood_analysis_boundaries"`
+	Rowid                          string     `avro:"rowid"`
+	Lat                            float32    `avro:"lat"`
+	Long                           float32    `avro:"long"`
+	DataAsOf                       time.Time  `avro:"data_as_of"`
+	DataLoadedAt                   time.Time  `avro:"data_loaded_at"`
+}
+
+var schemaFireEmsCall = avro.MustParse(`{"name":"raw.avro.fire_ems_call","type":"record","fields":[{"name":"call_number","type":"string"},{"name":"unit_id","type":"string"},{"name":"incident_number","type":"string"},{"name":"call_type","type":"string"},{"name":"call_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"watch_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"received_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"entry_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"dispatch_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"response_dttm","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"on_scene_dttm","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"transport_dttm","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"hospital_dttm","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"call_final_disposition","type":"string"},{"name":"available_dttm","type":["null",{"type":"long","logicalType":"timestamp-millis"}]},{"name":"address","type":["null","string"]},{"name":"city","type":"string"},{"name":"zipcode_of_incident","type":"string"},{"name":"battalion","type":"string"},{"name":"station_area","type":"string"},{"name":"box","type":"string"},{"name":"original_priority","type":"string"},{"name":"priority","type":"string"},{"name":"final_priority","type":"string"},{"name":"als_unit","type":["null","boolean"]},{"name":"call_type_group","type":["null","string"]},{"name":"number_of_alarms","type":"int"},{"name":"unit_type","type":"string"},{"name":"unit_sequence_in_call_dispatch","type":"int"},{"name":"fire_prevention_district","type":"string"},{"name":"supervisor_district","type":"string"},{"name":"neighborhood_analysis_boundaries","type":["null","string"]},{"name":"rowid","type":"string"},{"name":"lat","type":"float"},{"name":"long","type":"float"},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}}]}`)
+
+// Schema returns the schema for FireEmsCall.
+func (o *FireEmsCall) Schema() avro.Schema {
+	return schemaFireEmsCall
+}
+
+// Unmarshal decodes b into the receiver.
+func (o *FireEmsCall) Unmarshal(b []byte) error {
+	return avro.Unmarshal(o.Schema(), b, o)
+}
+
+// Marshal encodes the receiver.
+func (o *FireEmsCall) Marshal() ([]byte, error) {
 	return avro.Marshal(o.Schema(), o)
 }
 
@@ -114,13 +172,13 @@ type FireIncident struct {
 	NumberOfSprinklerHeadsOperating           *string   `avro:"number_of_sprinkler_heads_operating"`
 	SupervisorDistrict                        *string   `avro:"supervisor_district"`
 	NeighborhoodDistrict                      *string   `avro:"neighborhood_district"`
-	Lat                                       float64   `avro:"lat"`
-	Long                                      float64   `avro:"long"`
+	Lat                                       float32   `avro:"lat"`
+	Long                                      float32   `avro:"long"`
 	DataAsOf                                  time.Time `avro:"data_as_of"`
 	DataLoadedAt                              time.Time `avro:"data_loaded_at"`
 }
 
-var schemaFireIncident = avro.MustParse(`{"name":"raw.avro.fire_incident","type":"record","fields":[{"name":"incident_number","type":"string"},{"name":"exposure_number","type":"string"},{"name":"id","type":"string"},{"name":"address","type":"string"},{"name":"incident_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"call_number","type":"string"},{"name":"alarm_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"arrival_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"close_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"city","type":"string"},{"name":"zipcode","type":["null","string"]},{"name":"battalion","type":"string"},{"name":"station_area","type":"string"},{"name":"box","type":["null","string"]},{"name":"suppression_units","type":"string"},{"name":"suppression_personnel","type":"string"},{"name":"ems_units","type":"string"},{"name":"ems_personnel","type":"string"},{"name":"other_units","type":"string"},{"name":"other_personnel","type":"string"},{"name":"first_unit_on_scene","type":["null","string"]},{"name":"estimated_property_loss","type":["null","string"]},{"name":"estimated_contents_loss","type":["null","string"]},{"name":"fire_fatalities","type":"string"},{"name":"fire_injuries","type":"string"},{"name":"civilian_fatalities","type":"string"},{"name":"civilian_injuries","type":"string"},{"name":"number_of_alarms","type":"string"},{"name":"primary_situation","type":"string"},{"name":"mutual_aid","type":"string"},{"name":"action_taken_primary","type":["null","string"]},{"name":"action_taken_secondary","type":["null","string"]},{"name":"action_taken_other","type":["null","string"]},{"name":"detector_alerted_occupants","type":["null","string"]},{"name":"property_use","type":["null","string"]},{"name":"area_of_fire_origin","type":["null","string"]},{"name":"ignition_cause","type":["null","string"]},{"name":"ignition_factor_primary","type":["null","string"]},{"name":"ignition_factor_secondary","type":["null","string"]},{"name":"heat_source","type":["null","string"]},{"name":"item_first_ignited","type":["null","string"]},{"name":"human_factors_associated_with_ignition","type":["null","string"]},{"name":"structure_type","type":["null","string"]},{"name":"structure_status","type":["null","string"]},{"name":"floor_of_fire_origin","type":["null","int"]},{"name":"fire_spread","type":["null","string"]},{"name":"no_flame_spread","type":["null","string"]},{"name":"number_of_floors_with_minimum_damage","type":["null","string"]},{"name":"number_of_floors_with_significant_damage","type":["null","string"]},{"name":"number_of_floors_with_heavy_damage","type":["null","string"]},{"name":"number_of_floors_with_extreme_damage","type":["null","string"]},{"name":"detectors_present","type":["null","string"]},{"name":"detector_operation","type":["null","string"]},{"name":"detector_effectiveness","type":["null","string"]},{"name":"detector_failure_reason","type":["null","string"]},{"name":"automatic_extinguishing_system_present","type":["null","string"]},{"name":"automatic_extinguishing_system_type","type":["null","string"]},{"name":"automatic_extinguishing_system_performance","type":["null","string"]},{"name":"automatic_extinguishing_system_failure_reason","type":["null","string"]},{"name":"number_of_sprinkler_heads_operating","type":["null","string"]},{"name":"supervisor_district","type":["null","string"]},{"name":"neighborhood_district","type":["null","string"]},{"name":"lat","type":"double"},{"name":"long","type":"double"},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}}]}`)
+var schemaFireIncident = avro.MustParse(`{"name":"raw.avro.fire_incident","type":"record","fields":[{"name":"incident_number","type":"string"},{"name":"exposure_number","type":"string"},{"name":"id","type":"string"},{"name":"address","type":"string"},{"name":"incident_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"call_number","type":"string"},{"name":"alarm_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"arrival_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"close_dttm","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"city","type":"string"},{"name":"zipcode","type":["null","string"]},{"name":"battalion","type":"string"},{"name":"station_area","type":"string"},{"name":"box","type":["null","string"]},{"name":"suppression_units","type":"string"},{"name":"suppression_personnel","type":"string"},{"name":"ems_units","type":"string"},{"name":"ems_personnel","type":"string"},{"name":"other_units","type":"string"},{"name":"other_personnel","type":"string"},{"name":"first_unit_on_scene","type":["null","string"]},{"name":"estimated_property_loss","type":["null","string"]},{"name":"estimated_contents_loss","type":["null","string"]},{"name":"fire_fatalities","type":"string"},{"name":"fire_injuries","type":"string"},{"name":"civilian_fatalities","type":"string"},{"name":"civilian_injuries","type":"string"},{"name":"number_of_alarms","type":"string"},{"name":"primary_situation","type":"string"},{"name":"mutual_aid","type":"string"},{"name":"action_taken_primary","type":["null","string"]},{"name":"action_taken_secondary","type":["null","string"]},{"name":"action_taken_other","type":["null","string"]},{"name":"detector_alerted_occupants","type":["null","string"]},{"name":"property_use","type":["null","string"]},{"name":"area_of_fire_origin","type":["null","string"]},{"name":"ignition_cause","type":["null","string"]},{"name":"ignition_factor_primary","type":["null","string"]},{"name":"ignition_factor_secondary","type":["null","string"]},{"name":"heat_source","type":["null","string"]},{"name":"item_first_ignited","type":["null","string"]},{"name":"human_factors_associated_with_ignition","type":["null","string"]},{"name":"structure_type","type":["null","string"]},{"name":"structure_status","type":["null","string"]},{"name":"floor_of_fire_origin","type":["null","int"]},{"name":"fire_spread","type":["null","string"]},{"name":"no_flame_spread","type":["null","string"]},{"name":"number_of_floors_with_minimum_damage","type":["null","string"]},{"name":"number_of_floors_with_significant_damage","type":["null","string"]},{"name":"number_of_floors_with_heavy_damage","type":["null","string"]},{"name":"number_of_floors_with_extreme_damage","type":["null","string"]},{"name":"detectors_present","type":["null","string"]},{"name":"detector_operation","type":["null","string"]},{"name":"detector_effectiveness","type":["null","string"]},{"name":"detector_failure_reason","type":["null","string"]},{"name":"automatic_extinguishing_system_present","type":["null","string"]},{"name":"automatic_extinguishing_system_type","type":["null","string"]},{"name":"automatic_extinguishing_system_performance","type":["null","string"]},{"name":"automatic_extinguishing_system_failure_reason","type":["null","string"]},{"name":"number_of_sprinkler_heads_operating","type":["null","string"]},{"name":"supervisor_district","type":["null","string"]},{"name":"neighborhood_district","type":["null","string"]},{"name":"lat","type":"float"},{"name":"long","type":"float"},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}}]}`)
 
 // Schema returns the schema for FireIncident.
 func (o *FireIncident) Schema() avro.Schema {
@@ -134,5 +192,132 @@ func (o *FireIncident) Unmarshal(b []byte) error {
 
 // Marshal encodes the receiver.
 func (o *FireIncident) Marshal() ([]byte, error) {
+	return avro.Marshal(o.Schema(), o)
+}
+
+// PoliceIncident is a generated struct.
+type PoliceIncident struct {
+	IncidentDatetime       time.Time `avro:"incident_datetime"`
+	IncidentDate           time.Time `avro:"incident_date"`
+	IncidentTime           string    `avro:"incident_time"`
+	IncidentYear           string    `avro:"incident_year"`
+	IncidentDayOfWeek      string    `avro:"incident_day_of_week"`
+	ReportDatetime         time.Time `avro:"report_datetime"`
+	RowID                  string    `avro:"row_id"`
+	IncidentID             string    `avro:"incident_id"`
+	IncidentNumber         string    `avro:"incident_number"`
+	CadNumber              *string   `avro:"cad_number"`
+	ReportTypeCode         string    `avro:"report_type_code"`
+	ReportTypeDescription  string    `avro:"report_type_description"`
+	FileOnline             *bool     `avro:"file_online"`
+	IncidentCode           string    `avro:"incident_code"`
+	IncidentCategory       string    `avro:"incident_category"`
+	IncidentSubcategory    string    `avro:"incident_subcategory"`
+	IncidentDescription    string    `avro:"incident_description"`
+	Resolution             string    `avro:"resolution"`
+	Intersection           *string   `avro:"intersection"`
+	Cnn                    *string   `avro:"cnn"`
+	PoliceDistrict         string    `avro:"police_district"`
+	AnalysisNeighborhood   *string   `avro:"analysis_neighborhood"`
+	SupervisorDistrict     *float32  `avro:"supervisor_district"`
+	SupervisorDistrict2012 *float32  `avro:"supervisor_district_2012"`
+	Latitude               *float32  `avro:"latitude"`
+	Longitude              *float32  `avro:"longitude"`
+}
+
+var schemaPoliceIncident = avro.MustParse(`{"name":"raw.avro.police_incident","type":"record","fields":[{"name":"incident_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"incident_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"incident_time","type":"string"},{"name":"incident_year","type":"string"},{"name":"incident_day_of_week","type":"string"},{"name":"report_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"row_id","type":"string"},{"name":"incident_id","type":"string"},{"name":"incident_number","type":"string"},{"name":"cad_number","type":["null","string"]},{"name":"report_type_code","type":"string"},{"name":"report_type_description","type":"string"},{"name":"file_online","type":["null","boolean"]},{"name":"incident_code","type":"string"},{"name":"incident_category","type":"string"},{"name":"incident_subcategory","type":"string"},{"name":"incident_description","type":"string"},{"name":"resolution","type":"string"},{"name":"intersection","type":["null","string"]},{"name":"cnn","type":["null","string"]},{"name":"police_district","type":"string"},{"name":"analysis_neighborhood","type":["null","string"]},{"name":"supervisor_district","type":["null","float"]},{"name":"supervisor_district_2012","type":["null","float"]},{"name":"latitude","type":["null","float"]},{"name":"longitude","type":["null","float"]}]}`)
+
+// Schema returns the schema for PoliceIncident.
+func (o *PoliceIncident) Schema() avro.Schema {
+	return schemaPoliceIncident
+}
+
+// Unmarshal decodes b into the receiver.
+func (o *PoliceIncident) Unmarshal(b []byte) error {
+	return avro.Unmarshal(o.Schema(), b, o)
+}
+
+// Marshal encodes the receiver.
+func (o *PoliceIncident) Marshal() ([]byte, error) {
+	return avro.Marshal(o.Schema(), o)
+}
+
+// TrafficCrash is a generated struct.
+type TrafficCrash struct {
+	UniqueID             string    `avro:"unique_id"`
+	CnnIntrsctnFkey      *string   `avro:"cnn_intrsctn_fkey"`
+	CnnSgmtFkey          *string   `avro:"cnn_sgmt_fkey"`
+	CaseIDPkey           string    `avro:"case_id_pkey"`
+	TbLatitude           *float32  `avro:"tb_latitude"`
+	TbLongitude          *float32  `avro:"tb_longitude"`
+	GeocodeSource        string    `avro:"geocode_source"`
+	GeocodeLocation      string    `avro:"geocode_location"`
+	CollisionDatetime    time.Time `avro:"collision_datetime"`
+	CollisionDate        time.Time `avro:"collision_date"`
+	CollisionTime        *string   `avro:"collision_time"`
+	AccidentYear         string    `avro:"accident_year"`
+	Month                string    `avro:"month"`
+	DayOfWeek            *string   `avro:"day_of_week"`
+	TimeCat              *string   `avro:"time_cat"`
+	Juris                string    `avro:"juris"`
+	OfficerID            *string   `avro:"officer_id"`
+	ReportingDistrict    *string   `avro:"reporting_district"`
+	BeatNumber           *string   `avro:"beat_number"`
+	PrimaryRd            string    `avro:"primary_rd"`
+	SecondaryRd          *string   `avro:"secondary_rd"`
+	Distance             *float32  `avro:"distance"`
+	Direction            string    `avro:"direction"`
+	Weather1             string    `avro:"weather_1"`
+	Weather2             *string   `avro:"weather_2"`
+	CollisionSeverity    string    `avro:"collision_severity"`
+	TypeOfCollision      string    `avro:"type_of_collision"`
+	Mviw                 string    `avro:"mviw"`
+	PedAction            string    `avro:"ped_action"`
+	RoadSurface          string    `avro:"road_surface"`
+	RoadCond1            string    `avro:"road_cond_1"`
+	RoadCond2            string    `avro:"road_cond_2"`
+	Lighting             string    `avro:"lighting"`
+	ControlDevice        string    `avro:"control_device"`
+	Intersection         string    `avro:"intersection"`
+	VzPcfCode            *string   `avro:"vz_pcf_code"`
+	VzPcfGroup           *string   `avro:"vz_pcf_group"`
+	VzPcfDescription     string    `avro:"vz_pcf_description"`
+	VzPcfLink            *string   `avro:"vz_pcf_link"`
+	NumberKilled         int       `avro:"number_killed"`
+	NumberInjured        int       `avro:"number_injured"`
+	StreetView           *string   `avro:"street_view"`
+	DphColGrp            string    `avro:"dph_col_grp"`
+	DphColGrpDescription string    `avro:"dph_col_grp_description"`
+	PartyAtFault         *string   `avro:"party_at_fault"`
+	Party1Type           string    `avro:"party1_type"`
+	Party1DirOfTravel    *string   `avro:"party1_dir_of_travel"`
+	Party1MovePreAcc     *string   `avro:"party1_move_pre_acc"`
+	Party2Type           *string   `avro:"party2_type"`
+	Party2DirOfTravel    *string   `avro:"party2_dir_of_travel"`
+	Party2MovePreAcc     *string   `avro:"party2_move_pre_acc"`
+	DataAsOf             time.Time `avro:"data_as_of"`
+	DataUpdatedAt        time.Time `avro:"data_updated_at"`
+	DataLoadedAt         time.Time `avro:"data_loaded_at"`
+	Lat                  *float32  `avro:"lat"`
+	Long                 *float32  `avro:"long"`
+	AnalysisNeighborhood *string   `avro:"analysis_neighborhood"`
+	SupervisorDistrict   *string   `avro:"supervisor_district"`
+	PoliceDistrict       *string   `avro:"police_district"`
+}
+
+var schemaTrafficCrash = avro.MustParse(`{"name":"raw.avro.traffic_crash","type":"record","fields":[{"name":"unique_id","type":"string"},{"name":"cnn_intrsctn_fkey","type":["null","string"]},{"name":"cnn_sgmt_fkey","type":["null","string"]},{"name":"case_id_pkey","type":"string"},{"name":"tb_latitude","type":["null","float"]},{"name":"tb_longitude","type":["null","float"]},{"name":"geocode_source","type":"string"},{"name":"geocode_location","type":"string"},{"name":"collision_datetime","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"collision_date","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"collision_time","type":["null","string"]},{"name":"accident_year","type":"string"},{"name":"month","type":"string"},{"name":"day_of_week","type":["null","string"]},{"name":"time_cat","type":["null","string"]},{"name":"juris","type":"string"},{"name":"officer_id","type":["null","string"]},{"name":"reporting_district","type":["null","string"]},{"name":"beat_number","type":["null","string"]},{"name":"primary_rd","type":"string"},{"name":"secondary_rd","type":["null","string"]},{"name":"distance","type":["null","float"]},{"name":"direction","type":"string"},{"name":"weather_1","type":"string"},{"name":"weather_2","type":["null","string"]},{"name":"collision_severity","type":"string"},{"name":"type_of_collision","type":"string"},{"name":"mviw","type":"string"},{"name":"ped_action","type":"string"},{"name":"road_surface","type":"string"},{"name":"road_cond_1","type":"string"},{"name":"road_cond_2","type":"string"},{"name":"lighting","type":"string"},{"name":"control_device","type":"string"},{"name":"intersection","type":"string"},{"name":"vz_pcf_code","type":["null","string"]},{"name":"vz_pcf_group","type":["null","string"]},{"name":"vz_pcf_description","type":"string"},{"name":"vz_pcf_link","type":["null","string"]},{"name":"number_killed","type":"int"},{"name":"number_injured","type":"int"},{"name":"street_view","type":["null","string"]},{"name":"dph_col_grp","type":"string"},{"name":"dph_col_grp_description","type":"string"},{"name":"party_at_fault","type":["null","string"]},{"name":"party1_type","type":"string"},{"name":"party1_dir_of_travel","type":["null","string"]},{"name":"party1_move_pre_acc","type":["null","string"]},{"name":"party2_type","type":["null","string"]},{"name":"party2_dir_of_travel","type":["null","string"]},{"name":"party2_move_pre_acc","type":["null","string"]},{"name":"data_as_of","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_updated_at","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"data_loaded_at","type":{"type":"long","logicalType":"timestamp-millis"}},{"name":"lat","type":["null","float"]},{"name":"long","type":["null","float"]},{"name":"analysis_neighborhood","type":["null","string"]},{"name":"supervisor_district","type":["null","string"]},{"name":"police_district","type":["null","string"]}]}`)
+
+// Schema returns the schema for TrafficCrash.
+func (o *TrafficCrash) Schema() avro.Schema {
+	return schemaTrafficCrash
+}
+
+// Unmarshal decodes b into the receiver.
+func (o *TrafficCrash) Unmarshal(b []byte) error {
+	return avro.Unmarshal(o.Schema(), b, o)
+}
+
+// Marshal encodes the receiver.
+func (o *TrafficCrash) Marshal() ([]byte, error) {
 	return avro.Marshal(o.Schema(), o)
 }

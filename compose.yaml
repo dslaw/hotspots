@@ -57,15 +57,19 @@ services:
     env_file: .env-consume
     environment:
       CONSUMER_TYPE: "raw"
+      CONSUMER_GROUP_ID: "raw-consumer"
     depends_on:
       - broker
+    volumes:
+      - ./data:/worker/data
 
-  aggregate-consumer:
+  aggregates-consumer:
     build:
       context: consume
       dockerfile: Dockerfile
     env_file: .env-consume
     environment:
-      CONSUMER_TYPE: "aggregate"
+      CONSUMER_TYPE: "aggregates"
+      CONSUMER_GROUP_ID: "aggregates-consumer"
     depends_on:
       - broker
