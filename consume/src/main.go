@@ -32,8 +32,7 @@ func main() {
 	var writer Writable
 
 	if config.ConsumerType == RawConsumerType {
-		// TODO: Configure these paths.
-		writer = NewRawWriter("/worker/data/tmp", "/worker/data/staging")
+		writer = NewRawWriter(config.AcquiredDataTmpDir, config.AcquiredDataDstDir)
 	} else if config.ConsumerType == AggregateConsumerType {
 		conn, err := pgx.Connect(ctx, config.AggregatesDatabaseURL)
 		if err != nil {
