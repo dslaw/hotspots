@@ -20,7 +20,7 @@ func BucketTime(t time.Time, precision time.Duration) time.Time {
 }
 
 type Bucket struct {
-	Timestamp int64
+	Timestamp time.Time
 	Geohash   string
 }
 
@@ -55,7 +55,7 @@ func MakeBucket(record ProcessableRecord, timePrecision time.Duration, geohashPr
 
 	ts := record.Timestamp()
 	geohash := geohash.EncodeWithPrecision(float64(coordinates.Latitude), float64(coordinates.Longitude), geohashPrecision)
-	timestamp := BucketTime(ts, timePrecision).Unix()
+	timestamp := BucketTime(ts, timePrecision)
 	return &Bucket{Timestamp: timestamp, Geohash: geohash}
 }
 
