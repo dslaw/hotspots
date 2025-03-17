@@ -56,6 +56,14 @@ func TestNewRecord(t *testing.T) {
 			SchemaName:    "fire_incident",
 			ExpectedError: false,
 			ExpectedType:  &FireIncident{},
+		}, {
+			SchemaName:    "police_incident",
+			ExpectedError: false,
+			ExpectedType:  &PoliceIncident{},
+		}, {
+			SchemaName:    "traffic_crash",
+			ExpectedError: false,
+			ExpectedType:  &TrafficCrash{},
 		},
 	}
 	for _, testCase := range testCases {

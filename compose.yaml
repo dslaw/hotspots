@@ -36,7 +36,18 @@ services:
     ports:
       - "8432:5432"
     volumes:
-      - ./db:/docker-entrypoint-initdb.d
+      - ./db/aggregates:/docker-entrypoint-initdb.d
+
+  warehouse:
+    image: clickhouse:25.1
+    environment:
+      CLICKHOUSE_DB: warehouse
+      CLICKHOUSE_USER: wh_user
+      CLICKHOUSE_PASSWORD: wh_user
+    ports:
+      - "9000:9000/tcp"
+    volumes:
+      - ./db/warehouse:/docker-entrypoint-initdb.d
 
   ingest-worker:
     build:
@@ -59,10 +70,10 @@ services:
       CONSUMER_TYPE: "raw"
       CONSUMER_GROUP_ID: "raw-consumer"
       AGGREGATES_DB_URL: ""
-      ACQUIRED_DATA_TMP_DIR: "/worker/data/tmp"
-      ACQUIRED_DATA_DST_DIR: "/worker/data/acquired"
+      WAREHOUSE_URL: "clickhouse://wh_user:wh_user@warehouse:9000/warehouse?skip_verify=true"
     depends_on:
       - broker
+      - warehouse
     volumes:
       - ./data:/worker/data
 
@@ -75,8 +86,7 @@ services:
       CONSUMER_TYPE: "aggregates"
       CONSUMER_GROUP_ID: "aggregates-consumer"
       AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
-      ACQUIRED_DATA_TMP_DIR: ""
-      ACQUIRED_DATA_DST_DIR: ""
+      WAREHOUSE_URL: ""
     depends_on:
       - aggregates-db
       - broker
