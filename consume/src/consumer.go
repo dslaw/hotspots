@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	kafka "github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go"
 )
 
 // Readable provides methods for consuming messages from Kafka.
@@ -40,16 +40,10 @@ type BufferedConsumer struct {
 
 func NewBufferedConsumer(bufferSize int, flushInterval time.Duration, reader Readable, writer Writable) *BufferedConsumer {
 	if bufferSize <= 0 {
-		return nil
+		panic("Buffer size must be positive")
 	}
 	if flushInterval <= 0 {
-		return nil
-	}
-	if reader == nil {
-		return nil
-	}
-	if writer == nil {
-		return nil
+		panic("Flush interval must be positive")
 	}
 
 	buffer := make([]kafka.Message, bufferSize)
@@ -89,6 +83,7 @@ func (r *BufferedConsumer) numBufferedMessages() int {
 }
 
 // Flush flushes buffered messages out and marks them as committed in Kafka.
+// Note that messages may be processed more than once.
 func (r *BufferedConsumer) Flush(ctx context.Context) (uint, error) {
 	bufferEndIdx := r.numBufferedMessages()
 	if bufferEndIdx == 0 {
@@ -103,8 +98,8 @@ func (r *BufferedConsumer) Flush(ctx context.Context) (uint, error) {
 		return 0, err
 	}
 
-	// TODO: If we write to the sink successfully, but fail to commit,
-	// duplicates in the sink will be produced on rerun.
+	// XXX: The commit to Kafka may fail after the writer was successful, in
+	// which case the uncommitted messages will be reprocessed.
 	if err := r.reader.CommitMessages(ctx, messages...); err != nil {
 		slog.Error("Unable to commit messages", "error", err)
 		return 0, err
