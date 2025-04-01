@@ -39,14 +39,15 @@ class CheckpointingClient:
 
     @classmethod
     def from_redis_url(
-        cls, redis_url: str, timeout: int, connect_timeout: int, max_retries: int
+        cls,
+        redis_url: str,
+        retries: int,
+        timeout: int = 5,
+        connect_timeout: int = 5,
     ) -> "CheckpointingClient":
         redis_client = redis.from_url(
             redis_url,
-            retry=Retry(
-                ExponentialBackoff(),
-                max_retries,
-            ),
+            retry=Retry(ExponentialBackoff(), retries),
             retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError],
             socket_timeout=timeout,
             socket_connect_timeout=connect_timeout,
