@@ -21,7 +21,7 @@ $ docker compose up broker cache --wait
 
 Then, run an ingestion worker for the e.g. 311-cases resource:
 ```bash
-$ docker compose run --rm ingest-worker --resource-name="311-cases"
+$ docker compose run --rm ingest-worker "src.main" --resource-name="311-cases"
 ```
 
 There are additional flags that can be passed to the ingestion worker which are
@@ -38,14 +38,10 @@ handy for local development:
   being controlled by the `PAGE_SIZE` environment variable. This allows for
   ingesting a small amount of data to exercise the third-party integration for
   local development and testing.
-- `--write-to-file`: instead of writing ingested data to Kafka (default), the
-  `--write-to-file` flag will cause the ingestion worker to write the fetched
-  data to a local avro file. Useful for inspecting the data that would be
-  produced by the worker.
 
 Using the flags for development, a fast, local test run can be done:
 ```bash
-$ docker compose run --rm ingest-worker --resource-name="311-cases" --max-pages=1 --skip-wait
+$ docker compose run --rm ingest-worker "src.main" --resource-name="311-cases" --max-pages=1 --skip-wait
 ```
 
 and the run's output checked:
@@ -53,11 +49,25 @@ and the run's output checked:
 $ redis-cli -u redis://localhost:8379/0 get "ingest-checkpoint:311-cases"
 ```
 
-if writing the ingested data to the local filesystem:
+For local development, the [`produce_from_file`
+module](src/scripts/produce_from_file.py) is also available. The module can be
+used to produce data to Kafka from a local JSON file, rather than consuming data
+from the third-party API. To use it, the data to use must be present locally and
+the filename must match the resource name. For example, to download Fire and EMS
+calls data:
+
 ```bash
-$ docker compose run --rm ingest-worker --resource-name="311-cases" --max-pages=1 --skip-wait --write-to-file
-$ redis-cli -u redis://localhost:8379/0 get "ingest-checkpoint:311-cases"
-$ wc -l ../data/311-cases/*.avro
+$ mkdir -p sample-data
+$ curl -X GET "https://data.sfgov.org/resource/nuek-vuh3.json" > sample-data/fire-ems-calls.json
+```
+
+then run the module to write the sample data to Kafka:
+```bash
+$ docker compose run --rm \
+    --volume=$PWD/sample-data:/data \
+    ingest-worker "src.scripts.produce_from_file" \
+    --resource-name=fire-ems-calls \
+    --input-file=/data/fire-ems-calls.json
 ```
 
 

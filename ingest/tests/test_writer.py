@@ -1,23 +1,6 @@
-import tempfile
-from pathlib import Path
 from unittest.mock import Mock
 
-from src.writer import KafkaWriter, LocalFileWriter
-
-
-class TestLocalFileWriter:
-    def test_write_batch(self):
-        schema = {
-            "type": "record",
-            "name": "test",
-            "fields": [{"name": "key", "type": "int"}],
-        }
-        records = [{"key": 1}, {"key": 2}]
-
-        tmp_dir = tempfile.gettempdir()
-        writer = LocalFileWriter(Path(tmp_dir), schema)
-        actual = writer.write_batch(records)
-        assert actual == len(records)
+from src.writer import KafkaWriter
 
 
 class TestKafkaWriter:
