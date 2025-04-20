@@ -14,7 +14,7 @@ def load_schema(schemas_dir: Path, schema_name: str) -> dict[str, Any]:
 
 
 class Writer(Protocol):
-    def write_batch(self, records: Iterable[dict]) -> int: ...
+    def write_batch(self, records: Iterable[dict]) -> None: ...
 
 
 def make_serializer(schema: dict) -> Callable[[dict], bytes]:
@@ -45,11 +45,9 @@ class KafkaWriter(Writer):
         )
         return cls(producer, topic, schema_name, schema)
 
-    def write_batch(self, records: Iterable[dict]) -> int:
+    def write_batch(self, records: Iterable[dict]) -> None:
         headers = [(self.schema_header_name, self.schema_name.encode("utf-8"))]
-        sent_records = 0
         for record in records:
             self.producer.send(self.topic, record, headers=headers)
-            sent_records += 1
 
-        return sent_records
+        return
