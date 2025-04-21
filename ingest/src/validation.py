@@ -63,7 +63,7 @@ class FireEMSCall(BaseModel):
     available_dttm: datetime | None = None
     address: str | None = None
     city: str
-    zipcode_of_incident: str
+    zipcode_of_incident: str | None = None
     battalion: str
     station_area: str
     box: str
