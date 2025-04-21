@@ -30,6 +30,8 @@ func main() {
 	})
 	defer reader.Close()
 
+	bucketer := NewBucketer(config.BucketTimePrecision, config.BucketGeohashPrecision)
+
 	var writer Writable
 
 	if config.ConsumerType == RawConsumerType {
@@ -44,7 +46,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer conn.Close()
-		writer = NewRawWriter(conn)
+		writer = NewRawWriter(conn, bucketer)
 	} else if config.ConsumerType == AggregateConsumerType {
 		conn, err := pgx.Connect(ctx, config.AggregatesDatabaseURL)
 		if err != nil {
@@ -52,7 +54,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer conn.Close(ctx)
-		writer = NewAggregateWriter(config.BucketTimePrecision, config.BucketGeohashPrecision, conn)
+		writer = NewAggregateWriter(conn, bucketer)
 	} else {
 		slog.Error("Unknown consumer type", "consumer_type", config.ConsumerType)
 		os.Exit(1)
