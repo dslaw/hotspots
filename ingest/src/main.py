@@ -78,6 +78,7 @@ def main(resource_name: str, max_pages: int, *, skip_wait: bool = False) -> None
     )
     logging.info("Finished ingesting")
 
+    writer.close()
     return
 
 

@@ -35,7 +35,8 @@ def main(resource_name: str, input_file: Path):
     validated_records = validator.validate(records)
     writer.write_batch(validated_records)
 
-    writer.producer.flush()
+    writer.close()
+
     print(f"{resource_name}: Processed {len(records)}")
     return
 

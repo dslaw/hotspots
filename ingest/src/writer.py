@@ -16,6 +16,8 @@ def load_schema(schemas_dir: Path, schema_name: str) -> dict[str, Any]:
 class Writer(Protocol):
     def write_batch(self, records: Iterable[dict]) -> None: ...
 
+    def close(self, timeout: float | None) -> None: ...
+
 
 def make_serializer(schema: dict) -> Callable[[dict], bytes]:
     def serialize(v: dict) -> bytes:
@@ -51,3 +53,6 @@ class KafkaWriter(Writer):
             self.producer.send(self.topic, record, headers=headers)
 
         return
+
+    def close(self, timeout: float | None = None) -> None:
+        self.producer.close(timeout)

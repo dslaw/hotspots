@@ -16,3 +16,12 @@ class TestKafkaWriter:
         mock_kafka_producer.send.assert_called_with(
             "topic", {"key": 2}, headers=[("schema_name", b"schema_name")]
         )
+
+    def test_close(self):
+        mock_kafka_producer = Mock()
+        mock_kafka_producer.close = Mock(return_value=None)
+
+        writer = KafkaWriter(mock_kafka_producer, "topic", "schema_name", {})
+        writer.close(10.0)
+
+        mock_kafka_producer.close.assert_called_once_with(10.0)
