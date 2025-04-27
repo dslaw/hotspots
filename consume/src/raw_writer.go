@@ -283,11 +283,11 @@ func (w *RawWriter) WriteRawRecords(ctx context.Context, messages []kafka.Messag
 		Stmt       string
 		SchemaName string
 	}{
-		{Stmt: "insert into warehouse.a311_cases", SchemaName: SchemaName311Case},
-		{Stmt: "insert into warehouse.fire_ems_calls", SchemaName: SchemaNameFireEMSCall},
-		{Stmt: "insert into warehouse.fire_incidents", SchemaName: SchemaNameFireIncident},
-		{Stmt: "insert into warehouse.police_incidents", SchemaName: SchemaNamePoliceIncident},
-		{Stmt: "insert into warehouse.traffic_crashes", SchemaName: SchemaNameTrafficCrash},
+		{Stmt: "insert into warehouse.stg_311_cases", SchemaName: SchemaName311Case},
+		{Stmt: "insert into warehouse.stg_fire_ems_calls", SchemaName: SchemaNameFireEMSCall},
+		{Stmt: "insert into warehouse.stg_fire_incidents", SchemaName: SchemaNameFireIncident},
+		{Stmt: "insert into warehouse.stg_police_incidents", SchemaName: SchemaNamePoliceIncident},
+		{Stmt: "insert into warehouse.stg_traffic_crashes", SchemaName: SchemaNameTrafficCrash},
 	} {
 		batch, err := w.conn.PrepareBatch(ctx, item.Stmt, driver.WithReleaseConnection(), driver.WithCloseOnFlush())
 		if err != nil {
