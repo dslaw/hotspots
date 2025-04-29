@@ -10,11 +10,9 @@ resources that can be ingested.
 
 ## Getting Started
 
-To run ingestion locally, first build the `docker compose` stack from the
-project's root directory and start dependent services:
+To run ingestion locally, first build the `docker compose` stack and start
+dependent services:
 ```bash
-$ cd ..
-$ ln -s ingest/.env .env-ingest
 $ docker compose build
 $ docker compose up broker cache --wait
 ```

@@ -114,7 +114,4 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build compose stack
-        run: |
-          ln -s ingest/.env .env-ingest
-          ln -s consume/.env .env-consume
-          docker compose build
+        run: docker compose build

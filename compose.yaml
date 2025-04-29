@@ -9,6 +9,7 @@ services:
     image: apache/kafka-native:3.9.0
     ports:
       - "9092:9092"
+    env_file: .env
     environment:
       # Configure listeners for both docker and host.
       KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
@@ -25,14 +26,15 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "ingest:4:1"
+      KAFKA_CREATE_TOPICS: "${KAFKA_TOPIC}:4:1"
 
   aggregates-db:
     image: postgres:17.4-alpine
+    env_file: .env
     environment:
-      POSTGRES_DB: aggregates
-      POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: app_user
+      POSTGRES_DB: ${AGGREGATES_DB}
+      POSTGRES_USER: ${AGGREGATES_USER}
+      POSTGRES_PASSWORD: ${AGGREGATES_PASSWORD}
     ports:
       - "8432:5432"
     volumes:
@@ -41,9 +43,9 @@ services:
   warehouse:
     image: clickhouse:25.1
     environment:
-      CLICKHOUSE_DB: warehouse
-      CLICKHOUSE_USER: wh_user
-      CLICKHOUSE_PASSWORD: wh_user
+      CLICKHOUSE_DB: ${WAREHOUSE_DB}
+      CLICKHOUSE_USER: ${WAREHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${WAREHOUSE_PASSWORD}
     ports:
       - "9000:9000/tcp"
     volumes:
@@ -54,7 +56,7 @@ services:
       context: ingest
       dockerfile: Dockerfile
     command: "src.main"
-    env_file: .env-ingest
+    env_file: .env
     environment:
       SCHEMAS_DIR: /worker/schemas/raw
     depends_on:
@@ -67,12 +69,12 @@ services:
     build:
       context: consume
       dockerfile: Dockerfile
-    env_file: .env-consume
+    env_file: .env
     environment:
       CONSUMER_TYPE: "raw"
       CONSUMER_GROUP_ID: "raw-consumer"
       AGGREGATES_DB_URL: ""
-      WAREHOUSE_URL: "clickhouse://wh_user:wh_user@warehouse:9000/warehouse?skip_verify=true"
+      WAREHOUSE_URL: ${WAREHOUSE_URL_GO}
     depends_on:
       - broker
       - warehouse
@@ -83,11 +85,10 @@ services:
     build:
       context: consume
       dockerfile: Dockerfile
-    env_file: .env-consume
+    env_file: .env
     environment:
       CONSUMER_TYPE: "aggregates"
       CONSUMER_GROUP_ID: "aggregates-consumer"
-      AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
       WAREHOUSE_URL: ""
     depends_on:
       - aggregates-db
@@ -97,11 +98,9 @@ services:
     build:
       context: app
       dockerfile: Dockerfile
+    env_file: .env
     ports:
       - "8080:8080"
-    environment:
-      AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
-      APP_PORT: "8080"
     depends_on:
       - aggregates-db
 
@@ -109,9 +108,9 @@ services:
     build:
       context: reconcile
       dockerfile: Dockerfile
+    env_file: .env
     environment:
-      AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
-      WAREHOUSE_URL: "clickhouse://wh_user:wh_user@warehouse/warehouse"
+      WAREHOUSE_URL: ${WAREHOUSE_URL_PY}
     depends_on:
       - aggregates-db
       - warehouse

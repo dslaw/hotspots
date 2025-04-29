@@ -6,10 +6,9 @@ aggregated data.
 
 ## Getting Started
 
-To run ingestion locally, first build the `docker compose` stack from the
-project's root directory and start dependent services:
+To run ingestion locally, first build the `docker compose` stack and start
+dependent services:
 ```bash
-$ cd ..
 $ docker compose build
 $ docker compose up aggregates-db warehouse --wait
 ```

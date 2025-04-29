@@ -5,10 +5,9 @@ API for serving aggregated incident counts.
 
 ## Getting Started
 
-To run the server locally, first build the `docker compose` stack from the
-project's root directory and start dependent services:
+To run the server locally, first build the `docker compose` stack from the and
+start dependent services:
 ```bash
-$ cd ..
 $ docker compose build
 $ docker compose up aggregates-db --wait
 ```
