@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -30,23 +29,22 @@ func MakeGetAggregatesHandler(ctx context.Context, repo Repoer) func(http.Respon
 			return
 		}
 
-		startTime, endTime, err := GetTimeQueryParams(query)
+		params, err := GetAggregatesReqParams(query)
 		if err != nil {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
 
-		endTimeParam := MakeEndTimeParam(endTime)
-		rows, err := repo.GetAggregateRows(ctx, startTime, endTimeParam)
+		rows, err := repo.GetAggregateRows(ctx, params.StartTime, params.EndTime)
 		if err != nil {
 			slog.Error("Unable to read from database", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		records := MapAggregateRows(rows)
-		encoder := json.NewEncoder(w)
-		if err := encoder.Encode(records); err != nil {
+		records := Rollup(rows, params.TimePrecision, params.GeoPrecision)
+
+		if err := EncodeAggregates(records, w); err != nil {
 			slog.Error("Unable to encode response data", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
