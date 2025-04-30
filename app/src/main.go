@@ -12,11 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Repoer interface {
-	GetAggregateRows(context.Context, time.Time, time.Time) ([]AggregateRow, error)
-}
-
-func MakeGetAggregatesHandler(ctx context.Context, repo Repoer) func(http.ResponseWriter, *http.Request) {
+func MakeGetAggregatesHandler(ctx context.Context, service *AggregatesService) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -35,14 +31,12 @@ func MakeGetAggregatesHandler(ctx context.Context, repo Repoer) func(http.Respon
 			return
 		}
 
-		rows, err := repo.GetAggregateRows(ctx, params.StartTime, params.EndTime)
+		records, err := service.GetAggregates(ctx, params)
 		if err != nil {
-			slog.Error("Unable to read from database", "error", err)
+			slog.Error("Unable to fetch data", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		records := Rollup(rows, params.TimePrecision, params.GeoPrecision)
 
 		if err := EncodeAggregates(records, w); err != nil {
 			slog.Error("Unable to encode response data", "error", err)
@@ -61,9 +55,29 @@ func main() {
 		slog.Error("Unable to read database url")
 		os.Exit(1)
 	}
+	cacheURL, ok := os.LookupEnv("REDIS_URL")
+	if !ok {
+		slog.Error("Unable to read cache url")
+		os.Exit(1)
+	}
 	port, ok := os.LookupEnv("APP_PORT")
 	if !ok {
 		slog.Error("Unable to read app port")
+		os.Exit(1)
+	}
+	cachePrefix, ok := os.LookupEnv("CACHE_AGGREGATES_PREFIX")
+	if !ok {
+		slog.Error("Unable to read cache prefix")
+		os.Exit(1)
+	}
+	cacheTTLString, ok := os.LookupEnv("CACHE_AGGREGATES_TTL")
+	if !ok {
+		slog.Error("Unable to read cache ttl")
+		os.Exit(1)
+	}
+	cacheTTL, err := time.ParseDuration(cacheTTLString)
+	if err != nil {
+		slog.Error("Unable to parse cache ttl", "error", err)
 		os.Exit(1)
 	}
 
@@ -76,7 +90,12 @@ func main() {
 
 	repo := &Repo{conn: pool}
 
-	getAggregatesHandler := http.HandlerFunc(MakeGetAggregatesHandler(context.Background(), repo))
+	cache := NewCacheFromURL(cacheURL, cachePrefix, cacheTTL)
+	defer cache.Close()
+
+	service := NewAggregatesService(repo, cache)
+
+	getAggregatesHandler := http.HandlerFunc(MakeGetAggregatesHandler(context.Background(), service))
 	http.Handle("/aggregates", getAggregatesHandler)
 
 	slog.Info(fmt.Sprintf("Listening on port %s...", port))
