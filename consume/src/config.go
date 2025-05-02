@@ -36,6 +36,10 @@ type Config struct {
 	BucketGeohashPrecision uint
 	AggregatesDatabaseURL  string
 	WarehouseURL           string
+	AppURL                 string
+	HttpRequestTimeout     time.Duration
+	HttpRequestRetries     int
+	HttpRequestBackoff     time.Duration
 }
 
 func NewConfig() (*Config, bool) {
@@ -93,6 +97,36 @@ func NewConfig() (*Config, bool) {
 
 	config.WarehouseURL, ok = os.LookupEnv("WAREHOUSE_URL")
 	if !ok {
+		return nil, false
+	}
+
+	config.AppURL, ok = os.LookupEnv("APP_URL")
+	if !ok {
+		return nil, false
+	}
+
+	httpRequestTimeout, ok := os.LookupEnv("HTTP_REQUEST_TIMEOUT")
+	if !ok {
+		return nil, false
+	}
+	config.HttpRequestTimeout, err = time.ParseDuration(httpRequestTimeout)
+	if err != nil {
+		return nil, false
+	}
+
+	httpRequestRetriesString, ok := os.LookupEnv("HTTP_REQUEST_RETRIES")
+	if !ok {
+		return nil, false
+	}
+	httpRequestRetries, err := strconv.ParseInt(httpRequestRetriesString, 10, 32)
+	config.HttpRequestRetries = int(httpRequestRetries)
+
+	httpRequestBackoff, ok := os.LookupEnv("HTTP_REQUEST_BACKOFF")
+	if !ok {
+		return nil, false
+	}
+	config.HttpRequestBackoff, err = time.ParseDuration(httpRequestBackoff)
+	if err != nil {
 		return nil, false
 	}
 

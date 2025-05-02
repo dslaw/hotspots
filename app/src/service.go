@@ -9,6 +9,8 @@ import (
 
 type Repoer interface {
 	GetAggregateRows(context.Context, time.Time, time.Time) ([]AggregateRow, error)
+	InsertAggregateRows(context.Context, []AggregateRow) error
+	UpsertAggregateRows(context.Context, []AggregateRow) error
 }
 
 type Cacher interface {
@@ -48,4 +50,30 @@ func (s *AggregatesService) GetAggregates(ctx context.Context, params Aggregates
 	}
 
 	return records, nil
+}
+
+func MapToRow(record Aggregate) AggregateRow {
+	return AggregateRow{
+		OccurredAt: record.OccurredAt,
+		Geohash:    record.Geohash,
+		Count:      record.Count,
+	}
+}
+
+func MapToRows(records []Aggregate) []AggregateRow {
+	rows := make([]AggregateRow, len(records))
+	for idx, record := range records {
+		rows[idx] = MapToRow(record)
+	}
+	return rows
+}
+
+func (s *AggregatesService) InsertAggregates(ctx context.Context, records []Aggregate) error {
+	rows := MapToRows(records)
+	return s.repo.InsertAggregateRows(ctx, rows)
+}
+
+func (s *AggregatesService) UpsertAggregates(ctx context.Context, records []Aggregate) error {
+	rows := MapToRows(records)
+	return s.repo.UpsertAggregateRows(ctx, rows)
 }
