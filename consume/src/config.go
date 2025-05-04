@@ -25,6 +25,26 @@ func LookupDuration(name string) (time.Duration, bool) {
 	return d, true
 }
 
+func LookupInt(name string) (int, bool) {
+	s, ok := os.LookupEnv(name)
+	if !ok {
+		return 0, false
+	}
+
+	value, err := strconv.ParseInt(s, 10, 32)
+	return int(value), err == nil
+}
+
+func LookupUint(name string) (uint, bool) {
+	s, ok := os.LookupEnv(name)
+	if !ok {
+		return 0, false
+	}
+
+	value, err := strconv.ParseUint(s, 10, 32)
+	return uint(value), err == nil
+}
+
 type Config struct {
 	ConsumerType           string
 	Topic                  string
@@ -61,15 +81,10 @@ func NewConfig() (*Config, bool) {
 		return nil, false
 	}
 
-	bufferSizeString, ok := os.LookupEnv("BUFFER_SIZE")
+	config.BufferSize, ok = LookupInt("BUFFER_SIZE")
 	if !ok {
 		return nil, false
 	}
-	bufferSize, err := strconv.ParseInt(bufferSizeString, 10, 32)
-	if err != nil {
-		return nil, false
-	}
-	config.BufferSize = int(bufferSize)
 
 	config.FlushInterval, ok = LookupDuration("FLUSH_INTERVAL")
 	if !ok {
@@ -81,9 +96,10 @@ func NewConfig() (*Config, bool) {
 		return nil, false
 	}
 
-	bucketGeohashPrecisionString, ok := os.LookupEnv("BUCKET_GEOHASH_PRECISION")
-	bucketGeohashPrecision, err := strconv.ParseUint(bucketGeohashPrecisionString, 10, 32)
-	config.BucketGeohashPrecision = uint(bucketGeohashPrecision)
+	config.BucketGeohashPrecision, ok = LookupUint("BUCKET_GEOHASH_PRECISION")
+	if !ok {
+		return nil, false
+	}
 
 	config.ConsumerType, ok = os.LookupEnv("CONSUMER_TYPE")
 	if !ok {
@@ -105,28 +121,18 @@ func NewConfig() (*Config, bool) {
 		return nil, false
 	}
 
-	httpRequestTimeout, ok := os.LookupEnv("HTTP_REQUEST_TIMEOUT")
+	config.HttpRequestTimeout, ok = LookupDuration("HTTP_REQUEST_TIMEOUT")
 	if !ok {
-		return nil, false
-	}
-	config.HttpRequestTimeout, err = time.ParseDuration(httpRequestTimeout)
-	if err != nil {
 		return nil, false
 	}
 
-	httpRequestRetriesString, ok := os.LookupEnv("HTTP_REQUEST_RETRIES")
+	config.HttpRequestRetries, ok = LookupInt("HTTP_REQUEST_RETRIES")
 	if !ok {
 		return nil, false
 	}
-	httpRequestRetries, err := strconv.ParseInt(httpRequestRetriesString, 10, 32)
-	config.HttpRequestRetries = int(httpRequestRetries)
 
-	httpRequestBackoff, ok := os.LookupEnv("HTTP_REQUEST_BACKOFF")
+	config.HttpRequestBackoff, ok = LookupDuration("HTTP_REQUEST_BACKOFF")
 	if !ok {
-		return nil, false
-	}
-	config.HttpRequestBackoff, err = time.ParseDuration(httpRequestBackoff)
-	if err != nil {
 		return nil, false
 	}
 
