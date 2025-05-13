@@ -60,7 +60,7 @@ func TestBufferedConsumerBufferFull(t *testing.T) {
 
 func TestBufferedConsumerFetch(t *testing.T) {
 	ctx := context.Background()
-	flushInterval, _ := time.ParseDuration("1h")
+	flushInterval := time.Hour
 
 	mockR := new(mockReader)
 	mockR.On("FetchMessage", ctx).Return(kafka.Message{}, nil)
@@ -77,7 +77,7 @@ func TestBufferedConsumerFetch(t *testing.T) {
 
 func TestBufferedConsumerFetchWhenErrorFetchingMessage(t *testing.T) {
 	ctx := context.Background()
-	flushInterval, _ := time.ParseDuration("1h")
+	flushInterval := time.Hour
 	mockFetchErr := fmt.Errorf("Error")
 
 	mockR := new(mockReader)
@@ -95,7 +95,7 @@ func TestBufferedConsumerFetchWhenErrorFetchingMessage(t *testing.T) {
 
 func TestBufferedConsumerFetchWhenBufferFull(t *testing.T) {
 	ctx := context.Background()
-	flushInterval, _ := time.ParseDuration("1h")
+	flushInterval := time.Hour
 	bufferSize := 3
 
 	// Create a consumer with a full buffer.
@@ -156,7 +156,7 @@ func TestBufferedConsumerFlushWhenBufferEmpty(t *testing.T) {
 
 func TestBufferedConsumerFlushWhenBufferFull(t *testing.T) {
 	ctx := context.Background()
-	flushInterval, _ := time.ParseDuration("1h")
+	flushInterval := time.Hour
 	bufferSize := 3
 
 	mockR := new(mockReader)
@@ -186,7 +186,7 @@ func TestBufferedConsumerFlushWhenBufferFull(t *testing.T) {
 
 func TestBufferedConsumerFlushWhenBufferPartial(t *testing.T) {
 	ctx := context.Background()
-	flushInterval, _ := time.ParseDuration("1h")
+	flushInterval := time.Hour
 	bufferSize := 3
 
 	mockR := new(mockReader)
