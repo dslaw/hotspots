@@ -31,11 +31,6 @@ type BufferedConsumer struct {
 	reader Readable
 	writer Writable
 	buffer []kafka.Message
-	// bufferIdx gives the next writable index into the buffer. Messages in
-	// the buffer prior to bufferIdx are waiting to be flushed, while any
-	// messages at or after bufferIdx are have already been flushed and should
-	// not be reprocessed.
-	bufferIdx int
 }
 
 func NewBufferedConsumer(bufferSize int, flushInterval time.Duration, reader Readable, writer Writable) *BufferedConsumer {
@@ -46,16 +41,19 @@ func NewBufferedConsumer(bufferSize int, flushInterval time.Duration, reader Rea
 		panic("Flush interval must be positive")
 	}
 
-	buffer := make([]kafka.Message, bufferSize)
-	return &BufferedConsumer{BufferSize: bufferSize, FlushInterval: flushInterval, reader: reader, writer: writer, buffer: buffer, bufferIdx: 0}
+	buffer := make([]kafka.Message, 0, bufferSize)
+	return &BufferedConsumer{BufferSize: bufferSize, FlushInterval: flushInterval, reader: reader, writer: writer, buffer: buffer}
+}
+
+// BufferEmpty returns whether the buffer is empty or not.
+func (r *BufferedConsumer) BufferEmpty() bool {
+	return len(r.buffer) == 0
 }
 
 // BufferFull returns whether the buffer is full of unprocessed messages, i.e.
 // whether the buffer needs to be flushed.
 func (r *BufferedConsumer) BufferFull() bool {
-	// Previously flushed messages may linger in the buffer, so `len(r.buffer)`
-	// cannot be directly used to get the number of buffered messages.
-	return r.bufferIdx >= cap(r.buffer)
+	return len(r.buffer) == r.BufferSize
 }
 
 // Fetch fetches a message and buffers it. If the buffer is full, no message is
@@ -70,45 +68,32 @@ func (r *BufferedConsumer) Fetch(ctx context.Context) error {
 		return err
 	}
 
-	r.buffer[r.bufferIdx] = msg
-	r.bufferIdx += 1
+	r.buffer = append(r.buffer, msg)
 	return nil
-}
-
-func (r *BufferedConsumer) numBufferedMessages() int {
-	if r.BufferFull() {
-		return cap(r.buffer)
-	}
-	return r.bufferIdx
 }
 
 // Flush flushes buffered messages out and marks them as committed in Kafka.
 // Note that messages may be processed more than once.
-func (r *BufferedConsumer) Flush(ctx context.Context) (uint, error) {
-	bufferEndIdx := r.numBufferedMessages()
-	if bufferEndIdx == 0 {
-		// No unprocessed messages.
+func (r *BufferedConsumer) Flush(ctx context.Context) (int, error) {
+	if r.BufferEmpty() {
 		return 0, nil
 	}
 
-	messages := r.buffer[:bufferEndIdx]
-
-	if err := r.writer.Write(ctx, messages); err != nil {
+	if err := r.writer.Write(ctx, r.buffer); err != nil {
 		slog.Error("Unable to write data", "error", err)
 		return 0, err
 	}
 
 	// XXX: The commit to Kafka may fail after the writer was successful, in
 	// which case the uncommitted messages will be reprocessed.
-	if err := r.reader.CommitMessages(ctx, messages...); err != nil {
+	if err := r.reader.CommitMessages(ctx, r.buffer...); err != nil {
 		slog.Error("Unable to commit messages", "error", err)
 		return 0, err
 	}
 
-	// TODO: Could definitely clear the buffer out. Should be fast and might
-	// make things less brittle.
-	r.bufferIdx = 0
-	return uint(bufferEndIdx), nil
+	numMessages := len(r.buffer)
+	r.buffer = r.buffer[:0] // Retain capacity.
+	return numMessages, nil
 }
 
 func (r *BufferedConsumer) Process(ctx context.Context) error {
