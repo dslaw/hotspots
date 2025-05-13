@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 )
 
@@ -26,6 +28,17 @@ func FlattenBucketCounts(bucketCounts map[Bucket]int) []AggregateItem {
 		}
 		idx++
 	}
+
+	// Sort for testability.
+	slices.SortFunc(records, func(a, b AggregateItem) int {
+		if n := a.OccurredAt.Compare(b.OccurredAt); n != 0 {
+			return n
+		}
+		if n := cmp.Compare(a.Geohash, b.Geohash); n != 0 {
+			return n
+		}
+		return cmp.Compare(a.Count, b.Count)
+	})
 
 	return records
 }
