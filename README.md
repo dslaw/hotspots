@@ -42,7 +42,7 @@ Start services:
 $ docker compose up app aggregates-consumer raw-consumer --wait
 ```
 
-Begin ingestion for an incident type/resource, e.g. 311-cases:
+Begin ingestion for a single incident type/resource, e.g. 311-cases:
 
 > [!NOTE]
 > Before running ingestion, you may want to obtain and set the `API_TOKEN`
@@ -63,13 +63,19 @@ Begin ingestion for an incident type/resource, e.g. 311-cases:
 $ docker compose run --rm ingest-worker "src.main" --resource-name="311-cases"
 ```
 
+Ingestion workers for each defined incident type can also be run concurrently:
+```bash
+$ docker compose --profile ingestion run
+```
+
 Incident counts from the fast path can be queried using e.g. `curl`:
 ```bash
 $ curl -X GET "localhost:8080/aggregates"
 ```
 
 Reconciliation can be run to fix incident counts, as necessary, passing start
-and end time parameters:
+and end time parameters to indicate the time period over which reconciliation
+should be run:
 ```bash
 $ docker compose run --rm reconciliation-worker --start-time="2000-01-01T00:00:00Z" --end-time="2030-01-01T00:00:00Z"
 ```
