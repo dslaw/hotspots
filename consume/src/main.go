@@ -59,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 	if writer == nil {
-		slog.Error("Error initiating reader")
+		slog.Error("Error initiating writer")
 		os.Exit(1)
 	}
 
