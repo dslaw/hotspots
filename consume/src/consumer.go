@@ -127,10 +127,9 @@ func (r *BufferedConsumer) Process(ctx context.Context) error {
 			flush := errors.Is(err, context.DeadlineExceeded) || errors.Is(err, ErrBufferFull)
 
 			if err != nil && !flush {
-				// TODO: Main program still continues to run.
 				slog.Info("Terminating without flushing", "error", err)
 				cancel() // Cleanup `fetchCtx`.
-				return err
+				panic(err.Error())
 			}
 
 			if flush {
