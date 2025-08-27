@@ -58,6 +58,7 @@ services:
     environment:
       CONSUMER_TYPE: "raw"
       CONSUMER_GROUP_ID: "raw-consumer"
+      AGGREGATES_DB_URL: ""
       ACQUIRED_DATA_TMP_DIR: "/worker/data/tmp"
       ACQUIRED_DATA_DST_DIR: "/worker/data/acquired"
     depends_on:
@@ -73,5 +74,9 @@ services:
     environment:
       CONSUMER_TYPE: "aggregates"
       CONSUMER_GROUP_ID: "aggregates-consumer"
+      AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
+      ACQUIRED_DATA_TMP_DIR: ""
+      ACQUIRED_DATA_DST_DIR: ""
     depends_on:
+      - aggregates-db
       - broker
