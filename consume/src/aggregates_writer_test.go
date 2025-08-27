@@ -12,44 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestBucketTime(t *testing.T) {
-	precision, _ := time.ParseDuration("1m")
-
-	type testCase struct {
-		Datetime string
-		Expected string
-	}
-
-	testCases := []testCase{
-		{Datetime: "2025-01-01 13:04:00", Expected: "2025-01-01 13:04:00"},
-		{Datetime: "2025-01-01 13:04:05", Expected: "2025-01-01 13:05:00"},
-		{Datetime: "2025-01-01 13:04:59", Expected: "2025-01-01 13:05:00"},
-	}
-	for _, testCase := range testCases {
-		timestamp, _ := time.Parse(time.DateTime, testCase.Datetime)
-		expected, _ := time.Parse(time.DateTime, testCase.Expected)
-		actual := BucketTime(timestamp, precision)
-		assert.Equal(t, expected, actual)
-	}
-}
-
-func TestMakeBucket(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
-	geohashPrecision := uint(9)
-
-	record := &FireEmsCall{
-		ReceivedDttm: time.Date(2025, 1, 1, 13, 4, 5, 0, time.UTC),
-		Lat:          52.09367,
-		Long:         5.124242,
-	}
-	expectedGeohash := "u178ke77e"
-	expectedTimestamp := time.Date(2025, 1, 1, 13, 5, 0, 0, time.UTC)
-
-	actual := MakeBucket(record, timePrecision, geohashPrecision)
-	assert.Equal(t, expectedTimestamp, actual.Timestamp)
-	assert.Equal(t, expectedGeohash, actual.Geohash)
-}
-
 func TestAggregateWriterAggregate(t *testing.T) {
 	timePrecision, _ := time.ParseDuration("1m")
 	geohashPrecision := uint(9)
@@ -70,7 +32,7 @@ func TestAggregateWriterAggregate(t *testing.T) {
 	}
 	payloadWithoutLocation, _ := recordWithoutLocation.Marshal()
 
-	writer := NewAggregateWriter(timePrecision, geohashPrecision, nil)
+	writer := NewAggregateWriter(nil, NewBucketer(timePrecision, geohashPrecision))
 	messages := []kafka.Message{
 		{Headers: []kafka.Header{{Key: SchemaNameHeader, Value: []byte(SchemaNameFireEMSCall)}}, Value: payload},
 		// Message with unrecognized schema is skipped.
@@ -144,7 +106,7 @@ func TestAggregateWriterWrite(t *testing.T) {
 		{Headers: []kafka.Header{{Key: SchemaNameHeader, Value: []byte(SchemaNameFireEMSCall)}}, Value: payload},
 	}
 
-	writer := NewAggregateWriter(timePrecision, geohashPrecision, conn)
+	writer := NewAggregateWriter(conn, NewBucketer(timePrecision, geohashPrecision))
 	err := writer.Write(context.Background(), messages)
 
 	assert.Nil(t, err)

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/column"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
@@ -70,6 +71,9 @@ func (m *mockBatch) Columns() []column.Interface {
 }
 
 func TestRawWriterWrite(t *testing.T) {
+	timePrecision, _ := time.ParseDuration("1m")
+	geohashPrecision := uint(9)
+
 	batch := new(mockBatch)
 	batch.On("Append", mock.Anything).Return(nil)
 	batch.On("Flush").Return(nil)
@@ -90,7 +94,7 @@ func TestRawWriterWrite(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	writer := NewRawWriter(conn)
+	writer := NewRawWriter(conn, NewBucketer(timePrecision, geohashPrecision))
 	err := writer.Write(ctx, messages)
 
 	assert.Nil(t, err)

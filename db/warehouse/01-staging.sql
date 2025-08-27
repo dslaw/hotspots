@@ -21,6 +21,10 @@ create table warehouse.a311_cases (
     source String,
     data_as_of DateTime,
     data_loaded_at DateTime,
+
+    bucket_timestamp DateTime,
+    bucket_geohash String,
+    loaded_at DateTime,
 )
 engine = MergeTree()
 primary key (service_request_id, data_as_of);
@@ -63,6 +67,10 @@ create table warehouse.fire_ems_calls (
     long Float32,
     data_as_of DateTime,
     data_loaded_at DateTime,
+
+    bucket_timestamp DateTime,
+    bucket_geohash String,
+    loaded_at DateTime,
 )
 engine = MergeTree()
 primary key (incident_number, data_as_of);
@@ -134,6 +142,10 @@ create table warehouse.fire_incidents (
     long Float32,
     data_as_of DateTime,
     data_loaded_at DateTime,
+
+    bucket_timestamp DateTime,
+    bucket_geohash String,
+    loaded_at DateTime,
 )
 engine = MergeTree()
 primary key (incident_number, data_as_of);
@@ -165,6 +177,10 @@ create table warehouse.police_incidents (
     supervisor_district_2012 Nullable(Float32),
     latitude Nullable(Float32),
     longitude Nullable(Float32),
+
+    bucket_timestamp Nullable(DateTime),
+    bucket_geohash Nullable(String),
+    loaded_at DateTime,
 )
 engine = MergeTree()
 primary key (incident_number);
@@ -229,6 +245,10 @@ create table warehouse.traffic_crashes (
     analysis_neighborhood Nullable(String),
     supervisor_district Nullable(String),
     police_district Nullable(String),
+
+    bucket_timestamp Nullable(DateTime),
+    bucket_geohash Nullable(String),
+    loaded_at DateTime,
 )
 engine = MergeTree()
 primary key (unique_id);

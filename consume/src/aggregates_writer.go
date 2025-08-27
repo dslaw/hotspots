@@ -2,27 +2,10 @@ package main
 
 import (
 	"context"
-	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/mmcloughlin/geohash"
 	"github.com/segmentio/kafka-go"
 )
-
-// BucketTime rounds the given time to `precision`, such that the given time
-// occurred no later than the returned time.
-func BucketTime(t time.Time, precision time.Duration) time.Time {
-	truncated := t.Truncate(precision)
-	if truncated == t {
-		return truncated
-	}
-	return truncated.Add(precision)
-}
-
-type Bucket struct {
-	Timestamp time.Time
-	Geohash   string
-}
 
 type SendBatcher interface {
 	SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
@@ -31,33 +14,12 @@ type SendBatcher interface {
 // AggregateWriter aggregates/buckets messages by time and location of incident
 // and writes the counts to the data sink.
 type AggregateWriter struct {
-	TimePrecision    time.Duration
-	GeohashPrecision uint
-	conn             SendBatcher
+	conn     SendBatcher
+	bucketer *Bucketer
 }
 
-func NewAggregateWriter(timePrecision time.Duration, geohashPrecision uint, conn SendBatcher) *AggregateWriter {
-	if timePrecision <= 0 {
-		panic("Time precision must be positive")
-	}
-	if geohashPrecision == 0 {
-		panic("Geohash precision must be positive")
-	}
-	return &AggregateWriter{TimePrecision: timePrecision, GeohashPrecision: geohashPrecision, conn: conn}
-}
-
-// MakeBucket instantiates a Bucket for the given record and precision
-// parameters.
-func MakeBucket(record ProcessableRecord, timePrecision time.Duration, geohashPrecision uint) *Bucket {
-	coordinates := record.Coordinates()
-	if coordinates == nil {
-		return nil
-	}
-
-	ts := record.Timestamp()
-	geohash := geohash.EncodeWithPrecision(float64(coordinates.Latitude), float64(coordinates.Longitude), geohashPrecision)
-	timestamp := BucketTime(ts, timePrecision)
-	return &Bucket{Timestamp: timestamp, Geohash: geohash}
+func NewAggregateWriter(conn SendBatcher, bucketer *Bucketer) *AggregateWriter {
+	return &AggregateWriter{conn: conn, bucketer: bucketer}
 }
 
 // Aggregate aggregates/buckets messages by time and location of incident and
@@ -65,17 +27,17 @@ func MakeBucket(record ProcessableRecord, timePrecision time.Duration, geohashPr
 func (w *AggregateWriter) Aggregate(messages []kafka.Message) map[Bucket]int {
 	bucketCounts := make(map[Bucket]int)
 	for record := range DecodeMessages(SchemaNameHeader, messages) {
-		bucket := MakeBucket(record, w.TimePrecision, w.GeohashPrecision)
-		if bucket == nil {
+		bucket, ok := w.bucketer.MakeBucket(record)
+		if !ok {
 			continue
 		}
 
-		count, ok := bucketCounts[*bucket]
+		count, ok := bucketCounts[bucket]
 		if !ok {
 			count = 0
 		}
 
-		bucketCounts[*bucket] = count + 1
+		bucketCounts[bucket] = count + 1
 	}
 
 	return bucketCounts
