@@ -14,18 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockRepo struct {
-	mock.Mock
-}
-
-func (m *mockRepo) GetAggregateRows(ctx context.Context, startTime, endTime time.Time) ([]AggregateRow, error) {
-	args := m.Called(ctx, startTime, endTime)
-	return args.Get(0).([]AggregateRow), args.Error(1)
-}
-
 func TestGetAggregatesHandlerWhenIncorrectMethod(t *testing.T) {
 	repo := new(mockRepo)
-	handler := MakeGetAggregatesHandler(context.Background(), repo)
+	cache := new(mockCache)
+	service := NewAggregatesService(repo, cache)
+	handler := MakeGetAggregatesHandler(context.Background(), service)
 
 	req := httptest.NewRequest(http.MethodPost, "/aggregates", nil)
 	w := httptest.NewRecorder()
@@ -110,7 +103,13 @@ func TestGetAggregatesHandler(t *testing.T) {
 	for _, testCase := range testCases {
 		repo := new(mockRepo)
 		repo.On("GetAggregateRows", mock.Anything, mock.Anything, mock.Anything).Return(testCase.Records, nil)
-		handler := MakeGetAggregatesHandler(context.Background(), repo)
+
+		cache := new(mockCache)
+		cache.On("Get", mock.Anything, mock.Anything).Return([]Aggregate{}, ErrNoSuchKey)
+		cache.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		service := NewAggregatesService(repo, cache)
+		handler := MakeGetAggregatesHandler(context.Background(), service)
 
 		req := httptest.NewRequest(http.MethodGet, testCase.RequestURL, nil)
 		w := httptest.NewRecorder()
