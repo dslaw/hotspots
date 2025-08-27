@@ -8,7 +8,7 @@ import (
 )
 
 func TestBucketTime(t *testing.T) {
-	precision, _ := time.ParseDuration("1m")
+	precision := time.Minute
 
 	type testCase struct {
 		Datetime string
@@ -39,7 +39,7 @@ func TestBucketLocation(t *testing.T) {
 }
 
 func TestBucketerMakeBucket(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
+	timePrecision := time.Minute
 	geohashPrecision := uint(9)
 	bucketer := NewBucketer(timePrecision, geohashPrecision)
 
@@ -58,7 +58,7 @@ func TestBucketerMakeBucket(t *testing.T) {
 }
 
 func TestBucketerMakeBucketWhenNoCoordinates(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
+	timePrecision := time.Minute
 	geohashPrecision := uint(9)
 	bucketer := NewBucketer(timePrecision, geohashPrecision)
 

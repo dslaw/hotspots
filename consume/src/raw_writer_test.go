@@ -71,7 +71,7 @@ func (m *mockBatch) Columns() []column.Interface {
 }
 
 func TestRawWriterWrite(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
+	timePrecision := time.Minute
 	geohashPrecision := uint(9)
 
 	batch := new(mockBatch)
