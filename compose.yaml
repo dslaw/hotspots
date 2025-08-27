@@ -47,10 +47,12 @@ services:
       TEST_DATABASE_URL: "${AGGREGATES_TEST_DB_URL}?sslmode=disable"
     ports:
       - "8432:5432"
-    depends_on:
-      - aggregates-db
     volumes:
       - ./app/db:/db
+    depends_on:
+      - aggregates-db
+    profiles:
+      - tools
 
   warehouse:
     image: clickhouse:25.1
@@ -63,6 +65,10 @@ services:
     volumes:
       - ./db/warehouse:/docker-entrypoint-initdb.d
 
+  # The `ingest-worker` service is included here as a way to run a single
+  # ingestion worker manually. The inclusion of a profile keeps it from starting
+  # automatically, but cannot be used to run the worker as it does not allow for
+  # passing CLI flags.
   ingest-worker:
     build:
       context: ingest
@@ -71,11 +77,93 @@ services:
     env_file: .env
     environment:
       SCHEMAS_DIR: /worker/schemas/raw
+    volumes:
+      - ./schemas:/worker/schemas
     depends_on:
       - cache
       - broker
+    profiles:
+      - tools
+
+  ingest-worker-311-cases:
+    build:
+      context: ingest
+      dockerfile: Dockerfile
+    command: "src.main --resource-name=311-cases"
+    env_file: .env
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
     volumes:
       - ./schemas:/worker/schemas
+    depends_on:
+      - cache
+      - broker
+    profiles:
+      - ingestion
+
+  ingest-worker-fire-ems-calls:
+    build:
+      context: ingest
+      dockerfile: Dockerfile
+    command: "src.main --resource-name=fire-ems-calls"
+    env_file: .env
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
+    volumes:
+      - ./schemas:/worker/schemas
+    depends_on:
+      - cache
+      - broker
+    profiles:
+      - ingestion
+
+  ingest-worker-fire-incidents:
+    build:
+      context: ingest
+      dockerfile: Dockerfile
+    command: "src.main --resource-name=fire-incidents"
+    env_file: .env
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
+    volumes:
+      - ./schemas:/worker/schemas
+    depends_on:
+      - cache
+      - broker
+    profiles:
+      - ingestion
+
+  ingest-worker-police-department-incidents:
+    build:
+      context: ingest
+      dockerfile: Dockerfile
+    command: "src.main --resource-name=police-department-incidents"
+    env_file: .env
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
+    volumes:
+      - ./schemas:/worker/schemas
+    depends_on:
+      - cache
+      - broker
+    profiles:
+      - ingestion
+
+  ingest-worker-traffic-crashes:
+    build:
+      context: ingest
+      dockerfile: Dockerfile
+    command: "src.main --resource-name=traffic-crashes"
+    env_file: .env
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
+    volumes:
+      - ./schemas:/worker/schemas
+    depends_on:
+      - cache
+      - broker
+    profiles:
+      - ingestion
 
   raw-consumer:
     build:
@@ -117,6 +205,10 @@ services:
       - aggregates-db
       - cache
 
+  # The `reconciliation-worker` service is included here as a way to run a
+  # reconcililation worker manually. The inclusion of a profile keeps it from
+  # starting automatically, but cannot be used to run the worker as it does not
+  # allow for passing CLI flags.
   reconciliation-worker:
     build:
       context: reconcile
@@ -127,3 +219,5 @@ services:
     depends_on:
       - app
       - warehouse
+    profiles:
+      - tools

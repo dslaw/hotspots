@@ -78,9 +78,9 @@ $ uv sync
 
 To run linting/formating/type checking:
 ```bash
-uv run ruff check . --fix --extend-select I
-uv run ruff format .
-uv run mypy src/
+$ uv run ruff check . --fix --extend-select I
+$ uv run ruff format .
+$ uv run mypy src/
 ```
 
 To run tests:
