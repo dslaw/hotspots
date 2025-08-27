@@ -34,24 +34,46 @@ func (m *mockWriter) Write(ctx context.Context, messages []kafka.Message) error 
 	return args.Error(0)
 }
 
-func TestBufferedConsumerBufferFull(t *testing.T) {
+func TestBufferedConsumerBufferEmpty(t *testing.T) {
 	type testCase struct {
-		BufferIdx int
-		Expected  bool
+		Buffer   []kafka.Message
+		Expected bool
 	}
 	testCases := []testCase{
-		{BufferIdx: 0, Expected: false},
-		{BufferIdx: 6, Expected: false},
-		{BufferIdx: 10, Expected: true},
+		{Buffer: []kafka.Message{}, Expected: true},
+		{Buffer: []kafka.Message{{}, {}, {}}, Expected: false},
+		{Buffer: []kafka.Message{{}, {}, {}, {}, {}}, Expected: false},
 	}
 	for _, testCase := range testCases {
 		consumer := BufferedConsumer{
-			BufferSize:    10,
+			BufferSize:    5,
 			FlushInterval: time.Duration(0),
 			reader:        nil,
 			writer:        nil,
-			buffer:        make([]kafka.Message, 10),
-			bufferIdx:     testCase.BufferIdx,
+			buffer:        testCase.Buffer,
+		}
+		actual := consumer.BufferEmpty()
+		assert.Equal(t, testCase.Expected, actual)
+	}
+}
+
+func TestBufferedConsumerBufferFull(t *testing.T) {
+	type testCase struct {
+		Buffer   []kafka.Message
+		Expected bool
+	}
+	testCases := []testCase{
+		{Buffer: []kafka.Message{}, Expected: false},
+		{Buffer: []kafka.Message{{}, {}, {}}, Expected: false},
+		{Buffer: []kafka.Message{{}, {}, {}, {}, {}}, Expected: true},
+	}
+	for _, testCase := range testCases {
+		consumer := BufferedConsumer{
+			BufferSize:    5,
+			FlushInterval: time.Duration(0),
+			reader:        nil,
+			writer:        nil,
+			buffer:        testCase.Buffer,
 		}
 		actual := consumer.BufferFull()
 		assert.Equal(t, testCase.Expected, actual)
@@ -105,31 +127,10 @@ func TestBufferedConsumerFetchWhenBufferFull(t *testing.T) {
 		reader:        nil,
 		writer:        nil,
 		buffer:        []kafka.Message{{}, {}, {}},
-		bufferIdx:     3,
 	}
 
 	err := consumer.Fetch(ctx)
 	assert.ErrorIs(t, ErrBufferFull, err)
-}
-
-func TestBufferedConsumerNumBufferedMessages(t *testing.T) {
-	consumer := BufferedConsumer{
-		BufferSize: 2,
-		buffer:     make([]kafka.Message, 2),
-		bufferIdx:  1,
-	}
-	actual := consumer.numBufferedMessages()
-	assert.Equal(t, 1, actual)
-}
-
-func TestBufferedConsumerNumBufferedMessagesWhenFull(t *testing.T) {
-	consumer := BufferedConsumer{
-		BufferSize: 2,
-		buffer:     make([]kafka.Message, 2),
-		bufferIdx:  2,
-	}
-	actual := consumer.numBufferedMessages()
-	assert.Equal(t, 2, actual)
 }
 
 func TestBufferedConsumerFlushWhenBufferEmpty(t *testing.T) {
@@ -144,14 +145,12 @@ func TestBufferedConsumerFlushWhenBufferEmpty(t *testing.T) {
 
 	consumer := BufferedConsumer{
 		BufferSize: bufferSize,
-		buffer:     make([]kafka.Message, bufferSize),
-		bufferIdx:  0,
+		buffer:     make([]kafka.Message, 0, bufferSize),
 	}
 	actual, err := consumer.Flush(ctx)
 
 	assert.Nil(t, err)
-	assert.Equal(t, uint(0), actual)
-	assert.Equal(t, 0, consumer.bufferIdx)
+	assert.Equal(t, 0, actual)
 }
 
 func TestBufferedConsumerFlushWhenBufferFull(t *testing.T) {
@@ -172,13 +171,11 @@ func TestBufferedConsumerFlushWhenBufferFull(t *testing.T) {
 		reader:        mockR,
 		writer:        mockW,
 		buffer:        buffer,
-		bufferIdx:     bufferSize,
 	}
 	actual, err := consumer.Flush(ctx)
 
 	assert.Nil(t, err)
-	assert.Equal(t, uint(3), actual)
-	assert.Equal(t, 0, consumer.bufferIdx)
+	assert.Equal(t, 3, actual)
 
 	mockW.AssertCalled(t, "Write", ctx, buffer)
 	mockR.AssertCalled(t, "CommitMessages", ctx, buffer)
@@ -196,22 +193,20 @@ func TestBufferedConsumerFlushWhenBufferPartial(t *testing.T) {
 	mockW.On("Write", ctx, mock.Anything).Return(nil)
 
 	unflushedMessage := kafka.Message{Value: []byte("unflushed")}
+	buffer := make([]kafka.Message, 0, bufferSize)
+	buffer = append(buffer, unflushedMessage)
 
 	consumer := BufferedConsumer{
 		BufferSize:    bufferSize,
 		FlushInterval: flushInterval,
 		reader:        mockR,
 		writer:        mockW,
-		// Buffer has one unflushed message (at first position) and two messages
-		// which were previously flushed.
-		buffer:    []kafka.Message{unflushedMessage, {}, {}},
-		bufferIdx: 1,
+		buffer:        buffer,
 	}
 	actual, err := consumer.Flush(ctx)
 
 	assert.Nil(t, err)
-	assert.Equal(t, uint(1), actual)
-	assert.Equal(t, 0, consumer.bufferIdx)
+	assert.Equal(t, 1, actual)
 
 	mockW.AssertCalled(t, "Write", ctx, []kafka.Message{unflushedMessage})
 	mockR.AssertCalled(t, "CommitMessages", ctx, []kafka.Message{unflushedMessage})
