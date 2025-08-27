@@ -33,6 +33,6 @@ $ uv sync
 
 To run linting/formating:
 ```bash
-uv run ruff check . --fix --extend-select I
-uv run ruff format .
+$ uv run ruff check . --fix --extend-select I
+$ uv run ruff format .
 ```

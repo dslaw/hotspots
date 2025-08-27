@@ -117,3 +117,11 @@ func DecodeAggregates(s string) ([]Aggregate, error) {
 	err := json.Unmarshal([]byte(s), &records)
 	return records, err
 }
+
+func DecodeAggregatesFromReader(r io.Reader) ([]Aggregate, error) {
+	var records []Aggregate
+	decoder := json.NewDecoder(r)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&records)
+	return records, err
+}

@@ -10,7 +10,7 @@ To run a consumer locally, first build the `docker compose` stack and start
 dependent services:
 ```bash
 $ docker compose build
-$ docker compose up aggregates-db broker warehouse --wait
+$ docker compose up app broker warehouse --wait
 ```
 
 Then, start a consumer. The type of consumer, aggregate or raw data persistence,
@@ -26,11 +26,11 @@ $ docker compose up raw-consumer --wait
 
 To run linting/formating:
 ```bash
-gofmt -w -s .
-go vet ./...
+$ gofmt -w -s .
+$ go vet ./...
 ```
 
 To run tests:
 ```bash
-go test ./...
+$ go test ./...
 ```

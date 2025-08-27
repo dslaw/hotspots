@@ -1,9 +1,12 @@
 import argparse
 import datetime
 import os
+from contextlib import closing
+from itertools import batched
 
 import clickhouse_connect as clickhouse
-import psycopg
+
+from src.client import to_aggregate_item, write
 
 
 def read(src_client, start_time, end_time):
@@ -40,53 +43,12 @@ def read(src_client, start_time, end_time):
     )
 
 
-def write(dst_conn, blocks, *, page_size=10_000):
-    with dst_conn, dst_conn.cursor() as cursor:
-        cursor.execute(
-            """
-            create temp table reconciled_aggregate_buckets on commit drop as
-            select occurred_at, geo_id, incident_count from aggregate_buckets
-            where 0 = 1
-            """
-        )
+def process(stream):
+    for block in stream:
+        for row in block:
+            yield to_aggregate_item(*row)
 
-        for row_block in blocks:
-            cursor.executemany(
-                """
-                insert into reconciled_aggregate_buckets (occurred_at, geo_id, incident_count)
-                values (%s, %s, %s)
-                """,
-                row_block,
-            )
-
-        cursor.execute(
-            """
-            with deleted as (
-                delete from aggregate_buckets as dst
-                where exists (
-                    select 1
-                    from reconciled_aggregate_buckets as src
-                    where
-                        dst.occurred_at = src.occurred_at
-                        and dst.geo_id = src.geo_id
-                )
-                returning dst.id
-            ), inserted as (
-                insert into aggregate_buckets (occurred_at, geo_id, incident_count)
-                select * from reconciled_aggregate_buckets
-                returning id
-            )
-            select count(*), 'staged' as op from reconciled_aggregate_buckets
-            union all
-            select count(*), 'deleted' as op from deleted
-            union all
-            select count(*), 'inserted' as op from inserted
-            """
-        )
-
-        result = {op: count for count, op in cursor}
-
-    return result
+    return
 
 
 def make_time(s: str) -> datetime.datetime:
@@ -105,19 +67,16 @@ def main(start_time: datetime.datetime, end_time: datetime.datetime) -> None:
     if start_time >= end_time:
         raise ValueError("Start time must be before end time")
 
-    dst_url = os.environ["AGGREGATES_DB_URL"]
     src_url = os.environ["WAREHOUSE_URL"]
+    dst_url = os.environ["APP_URL"]
+    batch_size = int(os.environ["RECONCILE_BATCH_SIZE"])
 
-    src_client = clickhouse.get_client(dsn=src_url)
-    dst_conn = psycopg.connect(dst_url)
+    with closing(clickhouse.get_client(dsn=src_url)) as src_client:
+        with read(src_client, start_time, end_time) as stream:
+            records = process(stream)
+            records_batched = batched(records, batch_size)
+            write(dst_url, records_batched)
 
-    with read(src_client, start_time, end_time) as stream:
-        result = write(dst_conn, stream)
-
-    dst_conn.close()
-    src_client.close()
-
-    print(result)
     return
 
 

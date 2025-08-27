@@ -1,3 +1,4 @@
+-- migrate:up
 create table aggregate_buckets (
     id int generated always as identity,
     occurred_at timestamp without time zone not null,
@@ -8,3 +9,7 @@ create table aggregate_buckets (
 );
 
 create index on aggregate_buckets (occurred_at, geo_id) include (incident_count);
+
+
+-- migrate:down
+drop table aggregate_buckets cascade;

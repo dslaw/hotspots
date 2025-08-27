@@ -6,14 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestAggregateWriterAggregate(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
+	timePrecision := time.Minute
 	geohashPrecision := uint(9)
 
 	record := &FireEmsCall{
@@ -52,47 +50,18 @@ func TestAggregateWriterAggregate(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-type mockPostgresConn struct {
+type mockClient struct {
 	mock.Mock
 }
 
-func (m *mockPostgresConn) SendBatch(ctx context.Context, batch *pgx.Batch) pgx.BatchResults {
-	args := m.Called(ctx, batch)
-	return args.Get(0).(pgx.BatchResults)
-}
-
-type mockBatchResults struct {
-	mock.Mock
-}
-
-func (m *mockBatchResults) Exec() (pgconn.CommandTag, error) {
-	args := m.Called()
-	return args.Get(0).(pgconn.CommandTag), args.Error(1)
-}
-
-func (m *mockBatchResults) Query() (pgx.Rows, error) {
-	args := m.Called()
-	return args.Get(0).(pgx.Rows), args.Error(1)
-}
-
-func (m *mockBatchResults) QueryRow() pgx.Row {
-	args := m.Called()
-	return args.Get(0).(pgx.Rows)
-}
-
-func (m *mockBatchResults) Close() error {
-	args := m.Called()
+func (m *mockClient) PostAggregates(ctx context.Context, bucketCounts map[Bucket]int) error {
+	args := m.Called(ctx, bucketCounts)
 	return args.Error(0)
 }
 
 func TestAggregateWriterWrite(t *testing.T) {
-	timePrecision, _ := time.ParseDuration("1m")
+	timePrecision := time.Minute
 	geohashPrecision := uint(9)
-
-	batchResults := new(mockBatchResults)
-	batchResults.On("Close").Return(nil)
-	conn := new(mockPostgresConn)
-	conn.On("SendBatch", mock.Anything, mock.Anything).Return(batchResults)
 
 	record := &FireEmsCall{
 		ReceivedDttm: time.Date(2025, 1, 1, 13, 14, 15, 0, time.UTC),
@@ -106,10 +75,12 @@ func TestAggregateWriterWrite(t *testing.T) {
 		{Headers: []kafka.Header{{Key: SchemaNameHeader, Value: []byte(SchemaNameFireEMSCall)}}, Value: payload},
 	}
 
-	writer := NewAggregateWriter(conn, NewBucketer(timePrecision, geohashPrecision))
+	mockC := new(mockClient)
+	mockC.On("PostAggregates", mock.Anything, mock.Anything).Return(nil)
+
+	writer := NewAggregateWriter(mockC, NewBucketer(timePrecision, geohashPrecision))
 	err := writer.Write(context.Background(), messages)
 
 	assert.Nil(t, err)
-	conn.AssertNumberOfCalls(t, "SendBatch", 1)
-	batchResults.AssertNumberOfCalls(t, "Close", 1)
+	mockC.AssertNumberOfCalls(t, "PostAggregates", 1)
 }

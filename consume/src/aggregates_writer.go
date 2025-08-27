@@ -3,23 +3,22 @@ package main
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/segmentio/kafka-go"
 )
 
-type SendBatcher interface {
-	SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
+type Poster interface {
+	PostAggregates(context.Context, map[Bucket]int) error
 }
 
 // AggregateWriter aggregates/buckets messages by time and location of incident
 // and writes the counts to the data sink.
 type AggregateWriter struct {
-	conn     SendBatcher
+	client   Poster
 	bucketer *Bucketer
 }
 
-func NewAggregateWriter(conn SendBatcher, bucketer *Bucketer) *AggregateWriter {
-	return &AggregateWriter{conn: conn, bucketer: bucketer}
+func NewAggregateWriter(client Poster, bucketer *Bucketer) *AggregateWriter {
+	return &AggregateWriter{client: client, bucketer: bucketer}
 }
 
 // Aggregate aggregates/buckets messages by time and location of incident and
@@ -43,16 +42,9 @@ func (w *AggregateWriter) Aggregate(messages []kafka.Message) map[Bucket]int {
 	return bucketCounts
 }
 
-const insertAggregateRecordStmt = "insert into aggregate_buckets (occurred_at, geo_id, incident_count) values ($1, $2, $3)"
-
 // WriteAggregateRecords writes the given counts to the data sink.
 func (w *AggregateWriter) WriteAggregateRecords(ctx context.Context, bucketCounts map[Bucket]int) error {
-	batch := &pgx.Batch{}
-	for bucket, count := range bucketCounts {
-		batch.Queue(insertAggregateRecordStmt, bucket.Timestamp, bucket.Geohash, count)
-	}
-	br := w.conn.SendBatch(ctx, batch)
-	return br.Close()
+	return w.client.PostAggregates(ctx, bucketCounts)
 }
 
 // Write aggregates/buckets messages by time and location of incident and writes

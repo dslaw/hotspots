@@ -37,8 +37,20 @@ services:
       POSTGRES_PASSWORD: ${AGGREGATES_PASSWORD}
     ports:
       - "8432:5432"
+
+  aggregates-db-migrations:
+    image: amacneil/dbmate:2.27
+    env_file: .env
+    environment:
+      DBMATE_NO_DUMP_SCHEMA: true
+      DATABASE_URL: "${AGGREGATES_DB_URL}?sslmode=disable"
+      TEST_DATABASE_URL: "${AGGREGATES_TEST_DB_URL}?sslmode=disable"
+    ports:
+      - "8432:5432"
+    depends_on:
+      - aggregates-db
     volumes:
-      - ./db/aggregates:/docker-entrypoint-initdb.d
+      - ./app/db:/db
 
   warehouse:
     image: clickhouse:25.1
@@ -91,7 +103,7 @@ services:
       CONSUMER_GROUP_ID: "aggregates-consumer"
       WAREHOUSE_URL: ""
     depends_on:
-      - aggregates-db
+      - app
       - broker
 
   app:
@@ -113,5 +125,5 @@ services:
     environment:
       WAREHOUSE_URL: ${WAREHOUSE_URL_PY}
     depends_on:
-      - aggregates-db
+      - app
       - warehouse

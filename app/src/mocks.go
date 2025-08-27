@@ -16,6 +16,16 @@ func (m *mockRepo) GetAggregateRows(ctx context.Context, startTime, endTime time
 	return args.Get(0).([]AggregateRow), args.Error(1)
 }
 
+func (m *mockRepo) InsertAggregateRows(ctx context.Context, records []AggregateRow) error {
+	args := m.Called(ctx, records)
+	return args.Error(0)
+}
+
+func (m *mockRepo) UpsertAggregateRows(ctx context.Context, records []AggregateRow) error {
+	args := m.Called(ctx, records)
+	return args.Error(0)
+}
+
 type mockCache struct {
 	mock.Mock
 }

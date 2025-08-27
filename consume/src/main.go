@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/jackc/pgx/v5"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -48,13 +47,13 @@ func main() {
 		defer conn.Close()
 		writer = NewRawWriter(conn, bucketer)
 	} else if config.ConsumerType == AggregateConsumerType {
-		conn, err := pgx.Connect(ctx, config.AggregatesDatabaseURL)
-		if err != nil {
-			slog.Error("Unable to connect to aggregates database", "error", err)
-			os.Exit(1)
-		}
-		defer conn.Close(ctx)
-		writer = NewAggregateWriter(conn, bucketer)
+		client := NewAggregatesServiceClient(
+			config.AppURL,
+			config.HttpRequestTimeout,
+			config.HttpRequestRetries,
+			config.HttpRequestBackoff,
+		)
+		writer = NewAggregateWriter(client, bucketer)
 	} else {
 		slog.Error("Unknown consumer type", "consumer_type", config.ConsumerType)
 		os.Exit(1)
