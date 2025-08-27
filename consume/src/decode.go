@@ -2,6 +2,7 @@ package main
 
 import (
 	"iter"
+	"log/slog"
 	"time"
 
 	"github.com/hamba/avro/v2"
@@ -84,11 +85,17 @@ func DecodeMessages(schemaNameHeader string, messages []kafka.Message) iter.Seq[
 		for _, message := range messages {
 			schemaName, err := GetSchemaName(message.Headers, schemaNameHeader)
 			if err != nil {
+				slog.Error(
+					"Unable to get schema name from message headers, dropping message",
+					"headers", message.Headers,
+					"schema_name_header", schemaNameHeader,
+				)
 				continue
 			}
 
 			record, err := DecodeMessage(message.Value, schemaName)
 			if err != nil {
+				slog.Error("Unable to decode message, dropping message", "schema_name", schemaName)
 				continue
 			}
 

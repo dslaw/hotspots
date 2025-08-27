@@ -35,8 +35,7 @@ type Config struct {
 	BucketTimePrecision    time.Duration
 	BucketGeohashPrecision uint
 	AggregatesDatabaseURL  string
-	AcquiredDataTmpDir     string
-	AcquiredDataDstDir     string
+	WarehouseURL           string
 }
 
 func NewConfig() (*Config, bool) {
@@ -92,12 +91,7 @@ func NewConfig() (*Config, bool) {
 		return nil, false
 	}
 
-	config.AcquiredDataTmpDir, ok = os.LookupEnv("ACQUIRED_DATA_TMP_DIR")
-	if !ok {
-		return nil, false
-	}
-
-	config.AcquiredDataDstDir, ok = os.LookupEnv("ACQUIRED_DATA_DST_DIR")
+	config.WarehouseURL, ok = os.LookupEnv("WAREHOUSE_URL")
 	if !ok {
 		return nil, false
 	}

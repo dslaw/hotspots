@@ -24,23 +24,24 @@ type Bucket struct {
 	Geohash   string
 }
 
+type SendBatcher interface {
+	SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
+}
+
 // AggregateWriter aggregates/buckets messages by time and location of incident
 // and writes the counts to the data sink.
 type AggregateWriter struct {
 	TimePrecision    time.Duration
 	GeohashPrecision uint
-	conn             *pgx.Conn
+	conn             SendBatcher
 }
 
-func NewAggregateWriter(timePrecision time.Duration, geohashPrecision uint, conn *pgx.Conn) *AggregateWriter {
+func NewAggregateWriter(timePrecision time.Duration, geohashPrecision uint, conn SendBatcher) *AggregateWriter {
 	if timePrecision <= 0 {
 		panic("Time precision must be positive")
 	}
 	if geohashPrecision == 0 {
 		panic("Geohash precision must be positive")
-	}
-	if conn == nil {
-		panic("Connection cannot be nil")
 	}
 	return &AggregateWriter{TimePrecision: timePrecision, GeohashPrecision: geohashPrecision, conn: conn}
 }
@@ -82,24 +83,14 @@ func (w *AggregateWriter) Aggregate(messages []kafka.Message) map[Bucket]int {
 
 const insertAggregateRecordStmt = "insert into aggregate_buckets (occurred_at, geo_id, incident_count) values ($1, $2, $3)"
 
-func WriteAggregateRecords(ctx context.Context, conn *pgx.Conn, bucketCounts map[Bucket]int) error {
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
+// WriteAggregateRecords writes the given counts to the data sink.
+func (w *AggregateWriter) WriteAggregateRecords(ctx context.Context, bucketCounts map[Bucket]int) error {
 	batch := &pgx.Batch{}
-	for bucket := range bucketCounts {
-		count, _ := bucketCounts[bucket]
+	for bucket, count := range bucketCounts {
 		batch.Queue(insertAggregateRecordStmt, bucket.Timestamp, bucket.Geohash, count)
 	}
-	br := tx.SendBatch(ctx, batch)
-	if err := br.Close(); err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
+	br := w.conn.SendBatch(ctx, batch)
+	return br.Close()
 }
 
 // Write aggregates/buckets messages by time and location of incident and writes
@@ -111,5 +102,5 @@ func (w *AggregateWriter) Write(ctx context.Context, messages []kafka.Message) e
 	}
 
 	bucketCounts := w.Aggregate(messages)
-	return WriteAggregateRecords(ctx, w.conn, bucketCounts)
+	return w.WriteAggregateRecords(ctx, bucketCounts)
 }

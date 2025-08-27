@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/segmentio/kafka-go"
 )
@@ -32,11 +33,22 @@ func main() {
 	var writer Writable
 
 	if config.ConsumerType == RawConsumerType {
-		writer = NewRawWriter(config.AcquiredDataTmpDir, config.AcquiredDataDstDir)
+		warehouseConnOptions, err := clickhouse.ParseDSN(config.WarehouseURL)
+		if err != nil {
+			slog.Error("Unable to parse warehouse url", "error", err)
+			os.Exit(1)
+		}
+		conn, err := clickhouse.Open(warehouseConnOptions)
+		if err != nil {
+			slog.Error("Unable to connect to warehouse", "error", err)
+			os.Exit(1)
+		}
+		defer conn.Close()
+		writer = NewRawWriter(conn)
 	} else if config.ConsumerType == AggregateConsumerType {
 		conn, err := pgx.Connect(ctx, config.AggregatesDatabaseURL)
 		if err != nil {
-			slog.Error("Unable to connect to aggregates database")
+			slog.Error("Unable to connect to aggregates database", "error", err)
 			os.Exit(1)
 		}
 		defer conn.Close(ctx)
