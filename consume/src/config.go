@@ -8,7 +8,7 @@ import (
 
 const (
 	RawConsumerType       = "raw"
-	AggregateConsumerType = "aggregate"
+	AggregateConsumerType = "aggregates"
 )
 
 func LookupDuration(name string) (time.Duration, bool) {
@@ -34,6 +34,7 @@ type Config struct {
 	FlushInterval          time.Duration
 	BucketTimePrecision    time.Duration
 	BucketGeohashPrecision uint
+	AggregatesDatabaseURL  string
 }
 
 func NewConfig() (*Config, bool) {
@@ -50,7 +51,7 @@ func NewConfig() (*Config, bool) {
 		return nil, false
 	}
 
-	config.ConsumerGroupID, ok = os.LookupEnv("KAFKA_CONSUMER_GROUP_ID")
+	config.ConsumerGroupID, ok = os.LookupEnv("CONSUMER_GROUP_ID")
 	if !ok {
 		return nil, false
 	}
@@ -80,6 +81,14 @@ func NewConfig() (*Config, bool) {
 	config.BucketGeohashPrecision = uint(bucketGeohashPrecision)
 
 	config.ConsumerType, ok = os.LookupEnv("CONSUMER_TYPE")
+	if !ok {
+		return nil, false
+	}
+
+	config.AggregatesDatabaseURL, ok = os.LookupEnv("AGGREGATES_DB_URL")
+	if !ok {
+		return nil, false
+	}
 
 	return config, true
 }

@@ -99,15 +99,19 @@ func (r *BufferedConsumer) Flush(ctx context.Context) (uint, error) {
 	messages := r.buffer[:bufferEndIdx]
 
 	if err := r.writer.Write(ctx, messages); err != nil {
+		slog.Error("Unable to write data", "error", err)
 		return 0, err
 	}
 
 	// TODO: If we write to the sink successfully, but fail to commit,
 	// duplicates in the sink will be produced on rerun.
 	if err := r.reader.CommitMessages(ctx, messages...); err != nil {
+		slog.Error("Unable to commit messages", "error", err)
 		return 0, err
 	}
 
+	// TODO: Could definitely clear the buffer out. Should be fast and might
+	// make things less brittle.
 	r.bufferIdx = 0
 	return uint(bufferEndIdx), nil
 }

@@ -7,7 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	kafka "github.com/segmentio/kafka-go"
+	"github.com/jackc/pgx/v5"
+	"github.com/segmentio/kafka-go"
 )
 
 func main() {
@@ -28,13 +29,19 @@ func main() {
 	})
 	defer reader.Close()
 
-	decoder := &MessageDecoder{}
 	var writer Writable
 
 	if config.ConsumerType == RawConsumerType {
-		writer = NewRawWriter(decoder)
+		// TODO: Configure these paths.
+		writer = NewRawWriter("/worker/data/tmp", "/worker/data/staging")
 	} else if config.ConsumerType == AggregateConsumerType {
-		writer = NewAggregateWriter(config.BucketTimePrecision, config.BucketGeohashPrecision, decoder)
+		conn, err := pgx.Connect(ctx, config.AggregatesDatabaseURL)
+		if err != nil {
+			slog.Error("Unable to connect to aggregates database")
+			os.Exit(1)
+		}
+		defer conn.Close(ctx)
+		writer = NewAggregateWriter(config.BucketTimePrecision, config.BucketGeohashPrecision, conn)
 	} else {
 		slog.Error("Unknown consumer type", "consumer_type", config.ConsumerType)
 		os.Exit(1)

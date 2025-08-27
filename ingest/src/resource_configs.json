@@ -5,7 +5,7 @@
         "cadence": "hourly",
         "order_by": "requested_datetime"
     },
-    "fire-department-and-ems-dispatched-calls": {
+    "fire-ems-calls": {
         "resource_id": "nuek-vuh3",
         "schema_name": "fire_ems_call",
         "cadence": "daily",
@@ -23,7 +23,7 @@
         "cadence": "hourly",
         "order_by": "incident_datetime"
     },
-    "traffic-crashes-resulting-in-injuries": {
+    "traffic-crashes": {
         "resource_id": "ubvf-ztfx",
         "schema_name": "traffic_crash",
         "cadence": "quarterly",
