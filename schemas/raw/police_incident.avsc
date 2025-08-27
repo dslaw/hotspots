@@ -1,0 +1,33 @@
+{
+    "namespace": "raw.avro",
+    "type": "record",
+    "name": "police_incident",
+    "fields": [
+        {"name": "incident_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "incident_date", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "incident_time", "type": "string"},
+        {"name": "incident_year", "type": "string"},
+        {"name": "incident_day_of_week", "type": "string"},
+        {"name": "report_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "row_id", "type": "string"},
+        {"name": "incident_id", "type": "string"},
+        {"name": "incident_number", "type": "string"},
+        {"name": "cad_number", "type": ["null", "string"]},
+        {"name": "report_type_code", "type": "string"},
+        {"name": "report_type_description", "type": "string"},
+        {"name": "file_online", "type": ["null", "boolean"]},
+        {"name": "incident_code", "type": "string"},
+        {"name": "incident_category", "type": "string"},
+        {"name": "incident_subcategory", "type": "string"},
+        {"name": "incident_description", "type": "string"},
+        {"name": "resolution", "type": "string"},
+        {"name": "intersection", "type": ["null", "string"]},
+        {"name": "cnn", "type": ["null", "string"]},
+        {"name": "police_district", "type": "string"},
+        {"name": "analysis_neighborhood", "type": ["null", "string"]},
+        {"name": "supervisor_district", "type": ["null", "float"]},
+        {"name": "supervisor_district_2012", "type": ["null", "float"]},
+        {"name": "latitude", "type": ["null", "float"]},
+        {"name": "longitude", "type": ["null", "float"]}
+    ]
+}

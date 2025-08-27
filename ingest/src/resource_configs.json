@@ -1,32 +1,32 @@
 {
-    "fire-incidents": {
-        "resource_id": "wr8u-xric",
-        "cadence": "hourly",
-        "order_by": "incident_date",
-        "schema_name": "fire_incident"
-    },
-    "police-department-incidents": {
-        "resource_id": "wg3w-h783",
-        "cadence": "hourly",
-        "order_by": "incident_datetime",
-        "schema_name": "police_incident"
-    },
-    "traffic-crashes-resulting-in-injuries": {
-        "resource_id": "ubvf-ztfx",
-        "cadence": "quarterly",
-        "order_by": "collision_datetime",
-        "schema_name": "traffic_crash"
-    },
     "311-cases": {
         "resource_id": "vw6y-z8j6",
+        "schema_name": "a311_case",
         "cadence": "hourly",
-        "order_by": "data_as_of",
-        "schema_name": "a311_case"
+        "order_by": "requested_datetime"
     },
     "fire-department-and-ems-dispatched-calls": {
         "resource_id": "nuek-vuh3",
+        "schema_name": "fire_ems_call",
         "cadence": "daily",
-        "order_by": "received_dttm",
-        "schema_name": "fire_ems_call"
+        "order_by": "received_dttm"
+    },
+    "fire-incidents": {
+        "resource_id": "wr8u-xric",
+        "schema_name": "fire_incident",
+        "cadence": "hourly",
+        "order_by": "incident_date"
+    },
+    "police-department-incidents": {
+        "resource_id": "wg3w-h783",
+        "schema_name": "police_incident",
+        "cadence": "hourly",
+        "order_by": "incident_datetime"
+    },
+    "traffic-crashes-resulting-in-injuries": {
+        "resource_id": "ubvf-ztfx",
+        "schema_name": "traffic_crash",
+        "cadence": "quarterly",
+        "order_by": "collision_datetime"
     }
 }
