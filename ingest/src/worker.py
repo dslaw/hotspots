@@ -24,9 +24,12 @@ class IngestWorker:
     def fetch(
         self,
         resource_config: ResourceConfig,
+        page_size: int,
         start_offset: int = 0,
         max_pages: int = NO_MAX_PAGES,
     ) -> tuple[int, int]:
+        if page_size <= 0:
+            raise ValueError
         if start_offset < 0:
             raise ValueError
         if max_pages <= 0 and max_pages != NO_MAX_PAGES:
@@ -34,26 +37,22 @@ class IngestWorker:
 
         consumed_records = 0
         sent_records = 0
-        page = 0
-        while True:
-            if max_pages != NO_MAX_PAGES and page >= max_pages:
-                break
-
-            offset = start_offset + consumed_records
-            records = self.source_client.get_page(
-                resource_config.resource_id,
-                resource_config.order_by,
-                offset,
-            )
-            if not records:
-                break
-
+        consumed_pages = 0
+        for records in self.source_client.paginate(
+            resource_config.resource_id,
+            page_size,
+            resource_config.order_by,
+            start_offset,
+        ):
             validated_records = self.validator.validate(records)
             batch_sent_records = self.writer.write_batch(validated_records)
 
+            consumed_pages += 1
             consumed_records += len(records)
             sent_records += batch_sent_records
-            page += 1
+
+            if consumed_pages >= max_pages and max_pages != NO_MAX_PAGES:
+                break
 
             self._backoff()
 

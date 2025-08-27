@@ -66,19 +66,9 @@ def main(
     schema_name = resource_config.schema_name
     schema = load_schema(SCHEMAS_DIR, schema_name)
 
-    client = Client(
-        config.base_url,
-        config.api_token,
-        config.page_size,
-        config.max_retries,
-        config.backoff,
-        config.timeout,
-    )
+    client = Client(config.base_url, config.api_token, config.retries, config.backoff)
     checkpointing_client = CheckpointingClient.from_redis_url(
-        config.redis_url,
-        timeout=config.timeout,
-        connect_timeout=config.timeout,
-        max_retries=config.max_retries,
+        config.redis_url, retries=config.retries
     )
     validator = Validator(schema_name)
     writer = (
@@ -92,8 +82,9 @@ def main(
 
     logging.info(f"Getting checkpoint for {resource_name}")
     checkpoint = checkpointing_client.get_checkpoint(resource_name)
-    logging.info(f"Finished getting checkpoint for {resource_name}")
-    logging.info(checkpoint.to_json())
+    logging.info(
+        f"Finished getting checkpoint for {resource_name}: {checkpoint.to_json()}"
+    )
 
     now = datetime.datetime.now(datetime.UTC)
     ingest_at = checkpoint.wait_until(resource_config.cadence.minutes())
@@ -106,7 +97,9 @@ def main(
         sleep(wait_for)
 
     logging.info("Ingesting")
-    n_fetched, n_ingested = ingest_worker.fetch(resource_config, max_pages=max_pages)
+    n_fetched, n_ingested = ingest_worker.fetch(
+        resource_config, page_size=config.page_size, max_pages=max_pages
+    )
     finished_at = datetime.datetime.now(datetime.UTC)
     logging.info("Finished ingesting")
 

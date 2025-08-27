@@ -35,9 +35,8 @@ class Config:
     base_url: str
     api_token: str | None
     page_size: int
-    max_retries: int
+    retries: int
     backoff: int
-    timeout: int
     redis_url: str
     kafka_url: str
     kafka_topic: str
@@ -63,9 +62,8 @@ def load_config() -> Config:
     base_url = os.environ["API_BASE_URL"]
     api_token = os.environ.get("API_TOKEN", None)
     page_size = int(os.environ["PAGE_SIZE"])
-    max_retries = int(os.environ["MAX_RETRIES"])
+    retries = int(os.environ["RETRIES"])
     backoff = int(os.environ["BACKOFF"])
-    timeout = int(os.environ["TIMEOUT"])
     redis_url = os.environ["REDIS_URL"]
     kafka_url = os.environ["KAFKA_URL"]
     kafka_topic = os.environ["KAFKA_TOPIC"]
@@ -74,9 +72,8 @@ def load_config() -> Config:
         base_url=base_url,
         api_token=api_token,
         page_size=page_size,
-        max_retries=max_retries,
+        retries=retries,
         backoff=backoff,
-        timeout=timeout,
         redis_url=redis_url,
         kafka_url=kafka_url,
         kafka_topic=kafka_topic,
