@@ -59,6 +59,33 @@ jobs:
       - name: Run tests
         run: go test ./...
 
+  app-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23"
+
+      - name: Lint
+        run: |
+          go vet ./...
+
+          gofmt_output=$(gofmt -l .)
+          echo ${gofmt_output}
+          if [[ -n $gofmt_output ]]; then
+            echo "Go code is not formatted, run `gofmt -w -s ./...`"
+            exit 1
+          fi 
+
+      - name: Run tests
+        run: go test ./...
+
   build:
     runs-on: ubuntu-latest
     steps:

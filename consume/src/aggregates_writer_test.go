@@ -92,7 +92,14 @@ func TestMakeBucket(t *testing.T) {
 	timePrecision, _ := time.ParseDuration("1m")
 	geohashPrecision := uint(9)
 
-	record := &testRecord{}
+	record := &FireEmsCall{
+		ReceivedDttm: time.Date(2025, 1, 1, 13, 4, 5, 0, time.UTC),
+		Lat:          52.09367,
+		Long:         5.124242,
+	}
+	expectedGeohash := "u178ke77e"
+	expectedTimestamp := time.Date(2025, 1, 1, 13, 5, 0, 0, time.UTC)
+
 	actual := MakeBucket(record, timePrecision, geohashPrecision)
 	assert.Equal(t, expectedTimestamp, actual.Timestamp)
 	assert.Equal(t, expectedGeohash, actual.Geohash)
@@ -103,7 +110,14 @@ func TestAggregateWriterAggregate(t *testing.T) {
 	timePrecision, _ := time.ParseDuration("1m")
 	geohashPrecision := uint(9)
 
-	message := kafka.Message{Headers: []kafka.Header{}, Value: []byte("abc")}
+	record := &FireEmsCall{
+		ReceivedDttm: time.Date(2025, 1, 1, 13, 14, 15, 0, time.UTC),
+		Lat:          37.786358,
+		Long:         -122.41983,
+	}
+	payload, _ := record.Marshal()
+	expectedGeohash := "9q8yyqb97"
+	expectedTimestamp := time.Date(2025, 1, 1, 13, 15, 0, 0, time.UTC)
 
 	mockDecoder := new(mockMessageDecoder)
 	mockDecoder.On("DecodeMessage", mock.Anything, SchemaNameHeader).Return(&testRecord{}, nil).Once()
