@@ -1,4 +1,4 @@
-create table warehouse.a311_cases (
+create table warehouse.stg_311_cases (
     service_request_id Int32,
     requested_datetime DateTime,
     closed_date Nullable(DateTime),
@@ -29,7 +29,7 @@ create table warehouse.a311_cases (
 engine = MergeTree()
 primary key (service_request_id, data_as_of);
 
-create table warehouse.fire_ems_calls (
+create table warehouse.stg_fire_ems_calls (
     call_number String,
     unit_id String,
     incident_number String,
@@ -73,9 +73,9 @@ create table warehouse.fire_ems_calls (
     loaded_at DateTime,
 )
 engine = MergeTree()
-primary key (incident_number, data_as_of);
+primary key (loaded_at);
 
-create table warehouse.fire_incidents (
+create table warehouse.stg_fire_incidents (
     incident_number String,
     exposure_number String,
     id String,
@@ -148,9 +148,9 @@ create table warehouse.fire_incidents (
     loaded_at DateTime,
 )
 engine = MergeTree()
-primary key (incident_number, data_as_of);
+primary key (loaded_at);
 
-create table warehouse.police_incidents (
+create table warehouse.stg_police_incidents (
     incident_datetime DateTime,
     incident_date DateTime,
     incident_time String,
@@ -183,9 +183,9 @@ create table warehouse.police_incidents (
     loaded_at DateTime,
 )
 engine = MergeTree()
-primary key (incident_number);
+primary key (loaded_at);
 
-create table warehouse.traffic_crashes (
+create table warehouse.stg_traffic_crashes (
     unique_id String,
     cnn_intrsctn_fkey Nullable(String),
     cnn_sgmt_fkey Nullable(String),
@@ -251,4 +251,4 @@ create table warehouse.traffic_crashes (
     loaded_at DateTime,
 )
 engine = MergeTree()
-primary key (unique_id);
+primary key (loaded_at);

@@ -11,7 +11,7 @@ jobs:
         working-directory: ingest
     steps:
       - uses: actions/checkout@v4
-    
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -54,7 +54,7 @@ jobs:
           if [[ -n $gofmt_output ]]; then
             echo "Go code is not formatted, run `gofmt -w -s ./...`"
             exit 1
-          fi 
+          fi
 
       - name: Run tests
         run: go test ./...
@@ -81,10 +81,32 @@ jobs:
           if [[ -n $gofmt_output ]]; then
             echo "Go code is not formatted, run `gofmt -w -s ./...`"
             exit 1
-          fi 
+          fi
 
       - name: Run tests
         run: go test ./...
+
+  reconcile-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: reconcile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5"
+
+      - name: Install project
+        run: uv sync --dev
+
+      - name: Lint
+        run: uv run ruff check . --extend-select I
+
+      - name: Check formatting
+        run: uv run ruff format . --check
 
   build:
     runs-on: ubuntu-latest

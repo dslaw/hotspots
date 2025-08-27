@@ -104,3 +104,14 @@ services:
       APP_PORT: "8080"
     depends_on:
       - aggregates-db
+
+  reconciliation-worker:
+    build:
+      context: reconcile
+      dockerfile: Dockerfile
+    environment:
+      AGGREGATES_DB_URL: "postgres://app_user:app_user@aggregates-db/aggregates"
+      WAREHOUSE_URL: "clickhouse://wh_user:wh_user@warehouse/warehouse"
+    depends_on:
+      - aggregates-db
+      - warehouse
