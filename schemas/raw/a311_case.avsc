@@ -1,0 +1,29 @@
+{
+    "namespace": "raw.avro",
+    "type": "record",
+    "name": "a311_case",
+    "fields": [
+        {"name": "service_request_id", "type": "int"},
+        {"name": "requested_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "closed_date", "type": ["null", {"type": "long", "logicalType": "timestamp-millis"}]},
+        {"name": "updated_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "status_description", "type": "string"},
+        {"name": "status_notes", "type": ["null", "string"]},
+        {"name": "agency_responsible", "type": "string"},
+        {"name": "service_name", "type": "string"},
+        {"name": "service_subtype", "type": "string"},
+        {"name": "service_details", "type": ["null", "string"]},
+        {"name": "address", "type": "string"},
+        {"name": "street", "type": ["null", "string"]},
+        {"name": "supervisor_district", "type": ["null", "float"]},
+        {"name": "neighborhoods_sffind_boundaries", "type": ["null", "string"]},
+        {"name": "analysis_neighborhood", "type": ["null", "string"]},
+        {"name": "police_district", "type": ["null", "string"]},
+        {"name": "lat", "type": "float"},
+        {"name": "long", "type": "float"},
+        {"name": "bos_2012", "type": ["null", "float"]},
+        {"name": "source", "type": "string"},
+        {"name": "data_as_of", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+        {"name": "data_loaded_at", "type": {"type": "long", "logicalType": "timestamp-millis"}}
+    ]
+}
