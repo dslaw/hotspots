@@ -6,14 +6,11 @@ or persist the acquired data directly.
 
 ## Getting Started
 
-To run a consumer locally, first build the `docker compose` stack from the
-project's root directory and start dependent services:
-
+To run a consumer locally, first build the `docker compose` stack and start
+dependent services:
 ```bash
-$ cd ..
-$ ln -s consume/.env .env-consume
 $ docker compose build
-$ docker compose up broker --wait
+$ docker compose up aggregates-db broker warehouse --wait
 ```
 
 Then, start a consumer. The type of consumer, aggregate or raw data persistence,
