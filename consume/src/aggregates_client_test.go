@@ -23,7 +23,7 @@ func TestFlattenBucketCounts(t *testing.T) {
 	}
 
 	actual := FlattenBucketCounts(bucketCounts)
-	assert.ElementsMatch(t, expected, actual)
+	assert.Equal(t, expected, actual)
 }
 
 type mockHttpClient struct {
