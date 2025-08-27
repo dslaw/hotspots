@@ -33,10 +33,10 @@ def main(resource_name: str, input_file: Path):
         records = json.load(fh)
 
     validated_records = validator.validate(records)
-    sent_records = writer.write_batch(validated_records)
+    writer.write_batch(validated_records)
 
     writer.producer.flush()
-    print(f"{resource_name}: Read {len(records)}, published {sent_records}")
+    print(f"{resource_name}: Processed {len(records)}")
     return
 
 

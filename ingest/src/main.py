@@ -54,7 +54,7 @@ def main(resource_name: str, max_pages: int, *, skip_wait: bool = False) -> None
     writer = KafkaWriter.from_url(
         config.kafka_url, config.kafka_topic, schema_name=schema_name, schema=schema
     )
-    ingest_worker = IngestWorker(client, validator, writer)
+    ingest_worker = IngestWorker(client, validator, writer, checkpointing_client)
 
     logging.info(f"Getting checkpoint for {resource_name}")
     checkpoint = checkpointing_client.get_checkpoint(resource_name)
@@ -73,23 +73,11 @@ def main(resource_name: str, max_pages: int, *, skip_wait: bool = False) -> None
         sleep(wait_for)
 
     logging.info("Ingesting")
-    n_fetched, n_ingested = ingest_worker.fetch(
+    ingest_worker.fetch(
         resource_config, page_size=config.page_size, max_pages=max_pages
     )
-    finished_at = datetime.datetime.now(datetime.UTC)
     logging.info("Finished ingesting")
 
-    n_dropped = n_fetched - n_ingested
-    if n_dropped > 0:
-        logging.error(f"Dropped {n_dropped} records during run")
-
-    logging.info("Updating checkpoint")
-    checkpointing_client.set_checkpoint(
-        resource_name,
-        finished_at,
-        checkpoint.n_ingested + n_ingested,
-    )
-    logging.info("Finished updating checkpoint")
     return
 
 
