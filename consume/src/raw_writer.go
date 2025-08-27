@@ -9,6 +9,14 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+func mapNullableUInt8(v *int) *uint8 {
+	if v == nil {
+		return nil
+	}
+	value := uint8(*v)
+	return &value
+}
+
 func mapA311Case(record *A311Case) []interface{} {
 	return []interface{}{
 		record.ServiceRequestID,
@@ -64,7 +72,7 @@ func mapFireEmsCall(record *FireEmsCall) []interface{} {
 		record.FinalPriority,
 		record.AlsUnit,
 		record.CallTypeGroup,
-		record.NumberOfAlarms,
+		uint8(record.NumberOfAlarms),
 		record.UnitType,
 		record.UnitSequenceInCallDispatch,
 		record.FirePreventionDistrict,
@@ -124,7 +132,7 @@ func mapFireIncident(record *FireIncident) []interface{} {
 		record.HumanFactorsAssociatedWithIgnition,
 		record.StructureType,
 		record.StructureStatus,
-		record.FloorOfFireOrigin,
+		mapNullableUInt8(record.FloorOfFireOrigin),
 		record.FireSpread,
 		record.NoFlameSpread,
 		record.NumberOfFloorsWithMinimumDamage,
@@ -221,8 +229,8 @@ func mapTrafficCrash(record *TrafficCrash) []interface{} {
 		record.VzPcfGroup,
 		record.VzPcfDescription,
 		record.VzPcfLink,
-		record.NumberKilled,
-		record.NumberInjured,
+		uint8(record.NumberKilled),
+		uint8(record.NumberInjured),
 		record.StreetView,
 		record.DphColGrp,
 		record.DphColGrpDescription,
