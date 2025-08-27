@@ -1,4 +1,3 @@
-import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Callable, Iterable, Protocol
@@ -16,34 +15,6 @@ def load_schema(schemas_dir: Path, schema_name: str) -> dict[str, Any]:
 
 class Writer(Protocol):
     def write_batch(self, records: Iterable[dict]) -> int: ...
-
-
-class LocalFileWriter(Writer):
-    def __init__(self, output_dir: Path, schema: dict):
-        self.output_dir = output_dir
-        self.schema = schema
-
-    def _make_output_file(self) -> Path:
-        timestamp = datetime.datetime.now(datetime.UTC)
-        filename = f"{timestamp.isoformat()}.avro"
-        return self.output_dir / filename
-
-    def write_batch(self, records: Iterable[dict]) -> int:
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = self._make_output_file()
-
-        written_records: dict[str, int] = {"n": 0}
-
-        def count_seen(records: Iterable[dict]) -> Iterable[dict]:
-            for record in records:
-                yield record
-                written_records["n"] += 1
-            return
-
-        with output_file.open(mode="wb") as fh:
-            fastavro.writer(fh, self.schema, count_seen(records))
-
-        return written_records["n"]
 
 
 def make_serializer(schema: dict) -> Callable[[dict], bytes]:

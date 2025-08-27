@@ -53,12 +53,14 @@ services:
     build:
       context: ingest
       dockerfile: Dockerfile
+    command: "src.main"
     env_file: .env-ingest
+    environment:
+      SCHEMAS_DIR: /worker/schemas/raw
     depends_on:
       - cache
       - broker
     volumes:
-      - ./data:/worker/data
       - ./schemas:/worker/schemas
 
   raw-consumer:
