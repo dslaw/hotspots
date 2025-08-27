@@ -20,7 +20,7 @@ $ docker compose up app --wait
 
 and use e.g. `curl` to send a request:
 ```bash
-$ curl -X GET "localhost:8080/aggregates?start_time=2024-01-01T00:00:00Z"
+$ curl -X GET "localhost:8080/aggregates?start_time=2024-01-01T00:00Z"
 ```
 
 

@@ -24,14 +24,6 @@ type AggregateRow struct {
 	Count      int32
 }
 
-func MakeEndTimeParam(t time.Time) time.Time {
-	if t.IsZero() {
-		return time.Now()
-	}
-
-	return t
-}
-
 type Repo struct {
 	conn *pgxpool.Pool
 }
@@ -57,22 +49,4 @@ func (r *Repo) GetAggregateRows(ctx context.Context, startTime, endTime time.Tim
 	}
 
 	return aggregateRows, nil
-}
-
-type Aggregate struct {
-	OccurredAt time.Time `json:"occurred_at"`
-	Geohash    string    `json:"geohash"`
-	Count      int32     `json:"count"`
-}
-
-func MapAggregateRows(rows []AggregateRow) []Aggregate {
-	records := make([]Aggregate, len(rows))
-	for idx, row := range rows {
-		records[idx] = Aggregate{
-			OccurredAt: row.OccurredAt,
-			Geohash:    row.Geohash,
-			Count:      row.Count,
-		}
-	}
-	return records
 }
